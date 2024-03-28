@@ -2,9 +2,9 @@ package kairos
 
 import "context"
 
-type TaskHandleFunc = func(ctx context.Context) (data any, err error)
+type ScheduledTaskHandleFunc = func(ctx context.Context) (data any, err error)
 
-type TaskCallback interface {
+type ScheduledTaskCallback interface {
 	OnExecuted(id, name string, data any, reason, err error)
 }
 

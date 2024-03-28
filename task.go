@@ -18,15 +18,15 @@ var (
 	ErrorTaskEarlyReturn = errors.New("task early return")
 )
 
-var DefaultTaskHandleFunc TaskHandleFunc = func(ctx context.Context) (data any, err error) { return nil, nil }
+var DefaultScheduledTaskHandleFunc ScheduledTaskHandleFunc = func(ctx context.Context) (data any, err error) { return nil, nil }
 
-var taskPool = sync.Pool{New: func() interface{} { return &Task{once: new(sync.Once)} }}
+var taskPool = sync.Pool{New: func() interface{} { return &ScheduledTask{once: new(sync.Once)} }}
 
-type Task struct {
+type ScheduledTask struct {
 	id         string
 	name       string
-	callback   TaskCallback
-	handleFunc TaskHandleFunc
+	callback   ScheduledTaskCallback
+	handleFunc ScheduledTaskHandleFunc
 	parentCtx  context.Context
 	ctx        context.Context
 	cancel     context.CancelCauseFunc
@@ -34,9 +34,9 @@ type Task struct {
 	wg         sync.WaitGroup
 }
 
-func NewTask(parentCtx context.Context, name string, handleFunc TaskHandleFunc, callback TaskCallback) *Task {
+func NewScheduledTask(parentCtx context.Context, name string, handleFunc ScheduledTaskHandleFunc, callback ScheduledTaskCallback) *ScheduledTask {
 	if handleFunc == nil {
-		handleFunc = DefaultTaskHandleFunc
+		handleFunc = DefaultScheduledTaskHandleFunc
 	}
 
 	if parentCtx == nil {
@@ -47,7 +47,7 @@ func NewTask(parentCtx context.Context, name string, handleFunc TaskHandleFunc, 
 		callback = NewEmptyTaskCallback()
 	}
 
-	task := taskPool.Get().(*Task)
+	task := taskPool.Get().(*ScheduledTask)
 
 	task.id = uuid.NewString()
 	task.name = name
@@ -62,46 +62,46 @@ func NewTask(parentCtx context.Context, name string, handleFunc TaskHandleFunc, 
 	return task
 }
 
-func (t *Task) Stop() {
-	t.once.Do(func() {
+func (st *ScheduledTask) Stop() {
+	st.once.Do(func() {
 
-		t.cancel(ErrorTaskEarlyReturn)
+		st.cancel(ErrorTaskEarlyReturn)
 
-		t.wg.Wait()
+		st.wg.Wait()
 
-		taskPool.Put(t)
+		taskPool.Put(st)
 	})
 
-	atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&t.once)), unsafe.Pointer(new(sync.Once)))
+	atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&st.once)), unsafe.Pointer(new(sync.Once)))
 }
 
-func (t *Task) executor() {
+func (st *ScheduledTask) executor() {
 
 	taskTrigger := time.NewTicker(time.Millisecond * 500)
 
 	defer func() {
 		taskTrigger.Stop()
-		t.wg.Done()
+		st.wg.Done()
 	}()
 
 	for {
 		select {
 
-		case <-t.ctx.Done():
+		case <-st.ctx.Done():
 
-			switch context.Cause(t.ctx) {
+			switch context.Cause(st.ctx) {
 
 			case context.Canceled:
-				t.callback.OnExecuted(t.id, t.name, nil, ErrorTaskCanceled, nil)
-				t.cancel(context.Canceled)
+				st.callback.OnExecuted(st.id, st.name, nil, ErrorTaskCanceled, nil)
+				st.cancel(context.Canceled)
 
 			case context.DeadlineExceeded:
-				result, err := t.handleFunc(t.ctx)
-				t.callback.OnExecuted(t.id, t.name, result, ErrorTaskTimeout, err)
+				result, err := st.handleFunc(st.ctx)
+				st.callback.OnExecuted(st.id, st.name, result, ErrorTaskTimeout, err)
 
 			case ErrorTaskEarlyReturn:
-				result, err := t.handleFunc(t.ctx)
-				t.callback.OnExecuted(t.id, t.name, result, ErrorTaskEarlyReturn, err)
+				result, err := st.handleFunc(st.ctx)
+				st.callback.OnExecuted(st.id, st.name, result, ErrorTaskEarlyReturn, err)
 			}
 
 			return
