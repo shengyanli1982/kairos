@@ -18,7 +18,7 @@ var (
 	ErrorTaskEarlyReturn = errors.New("task early return")
 )
 
-var DefaultScheduledTaskHandleFunc ScheduledTaskHandleFunc = func(ctx context.Context) (data any, err error) { return nil, nil }
+var DefaultScheduledTaskHandleFunc ScheduledTaskHandleFunc = func(done WaitForCtxDone) (data any, err error) { return nil, nil }
 
 var taskPool = sync.Pool{New: func() interface{} { return &ScheduledTask{once: new(sync.Once)} }}
 
@@ -55,6 +55,7 @@ func NewScheduledTask(parentCtx context.Context, name string, handleFunc Schedul
 	task.handleFunc = handleFunc
 	task.parentCtx = parentCtx
 	task.ctx, task.cancel = context.WithCancelCause(parentCtx)
+	task.wg = sync.WaitGroup{}
 
 	task.wg.Add(1)
 	go task.executor()
@@ -68,6 +69,8 @@ func (st *ScheduledTask) Stop() {
 		st.cancel(ErrorTaskEarlyReturn)
 
 		st.wg.Wait()
+
+		st.reset()
 
 		taskPool.Put(st)
 	})
@@ -96,11 +99,11 @@ func (st *ScheduledTask) executor() {
 				st.cancel(context.Canceled)
 
 			case context.DeadlineExceeded:
-				result, err := st.handleFunc(st.ctx)
+				result, err := st.handleFunc(st.ctx.Done())
 				st.callback.OnExecuted(st.id, st.name, result, ErrorTaskTimeout, err)
 
 			case ErrorTaskEarlyReturn:
-				result, err := st.handleFunc(st.ctx)
+				result, err := st.handleFunc(st.ctx.Done())
 				st.callback.OnExecuted(st.id, st.name, result, ErrorTaskEarlyReturn, err)
 			}
 
@@ -110,4 +113,21 @@ func (st *ScheduledTask) executor() {
 			runtime.Gosched()
 		}
 	}
+}
+
+func (st *ScheduledTask) reset() {
+	st.id = ""
+	st.name = ""
+}
+
+func (st *ScheduledTask) GetID() string {
+	return st.id
+}
+
+func (st *ScheduledTask) GetName() string {
+	return st.name
+}
+
+func (st *ScheduledTask) GetHandleFunc() ScheduledTaskHandleFunc {
+	return st.handleFunc
 }
