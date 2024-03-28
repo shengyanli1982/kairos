@@ -20,18 +20,40 @@ var (
 
 var DefaultScheduledTaskHandleFunc ScheduledTaskHandleFunc = func(done WaitForCtxDone) (data any, err error) { return nil, nil }
 
-var taskPool = sync.Pool{New: func() interface{} { return &ScheduledTask{once: new(sync.Once)} }}
+var taskPool = sync.Pool{New: func() interface{} { return &ScheduledTask{once: new(sync.Once), metadata: &ScheduledTaskMetadata{}} }}
 
-type ScheduledTask struct {
+type ScheduledTaskMetadata struct {
 	id         string
 	name       string
-	callback   ScheduledTaskCallback
 	handleFunc ScheduledTaskHandleFunc
-	parentCtx  context.Context
-	ctx        context.Context
-	cancel     context.CancelCauseFunc
-	once       *sync.Once
-	wg         sync.WaitGroup
+}
+
+func (stm *ScheduledTaskMetadata) GetID() string {
+	return stm.id
+}
+
+func (stm *ScheduledTaskMetadata) GetName() string {
+	return stm.name
+}
+
+func (stm *ScheduledTaskMetadata) GetHandleFunc() ScheduledTaskHandleFunc {
+	return stm.handleFunc
+}
+
+func (stm *ScheduledTaskMetadata) Reset() {
+	stm.id = ""
+	stm.name = ""
+	stm.handleFunc = nil
+}
+
+type ScheduledTask struct {
+	metadata  *ScheduledTaskMetadata
+	callback  ScheduledTaskCallback
+	parentCtx context.Context
+	ctx       context.Context
+	cancel    context.CancelCauseFunc
+	once      *sync.Once
+	wg        sync.WaitGroup
 }
 
 func NewScheduledTask(parentCtx context.Context, name string, handleFunc ScheduledTaskHandleFunc, callback ScheduledTaskCallback) *ScheduledTask {
@@ -49,10 +71,11 @@ func NewScheduledTask(parentCtx context.Context, name string, handleFunc Schedul
 
 	task := taskPool.Get().(*ScheduledTask)
 
-	task.id = uuid.NewString()
-	task.name = name
+	task.metadata.id = uuid.NewString()
+	task.metadata.name = name
+	task.metadata.handleFunc = handleFunc
+
 	task.callback = callback
-	task.handleFunc = handleFunc
 	task.parentCtx = parentCtx
 	task.ctx, task.cancel = context.WithCancelCause(parentCtx)
 	task.wg = sync.WaitGroup{}
@@ -70,7 +93,7 @@ func (st *ScheduledTask) Stop() {
 
 		st.wg.Wait()
 
-		st.reset()
+		st.metadata.Reset()
 
 		taskPool.Put(st)
 	})
@@ -95,16 +118,16 @@ func (st *ScheduledTask) executor() {
 			switch context.Cause(st.ctx) {
 
 			case context.Canceled:
-				st.callback.OnExecuted(st.id, st.name, nil, ErrorTaskCanceled, nil)
+				st.callback.OnExecuted(st.metadata.id, st.metadata.name, nil, ErrorTaskCanceled, nil)
 				st.cancel(context.Canceled)
 
 			case context.DeadlineExceeded:
-				result, err := st.handleFunc(st.ctx.Done())
-				st.callback.OnExecuted(st.id, st.name, result, ErrorTaskTimeout, err)
+				result, err := st.metadata.handleFunc(st.ctx.Done())
+				st.callback.OnExecuted(st.metadata.id, st.metadata.name, result, ErrorTaskTimeout, err)
 
 			case ErrorTaskEarlyReturn:
-				result, err := st.handleFunc(st.ctx.Done())
-				st.callback.OnExecuted(st.id, st.name, result, ErrorTaskEarlyReturn, err)
+				result, err := st.metadata.handleFunc(st.ctx.Done())
+				st.callback.OnExecuted(st.metadata.id, st.metadata.name, result, ErrorTaskEarlyReturn, err)
 			}
 
 			return
@@ -115,19 +138,6 @@ func (st *ScheduledTask) executor() {
 	}
 }
 
-func (st *ScheduledTask) reset() {
-	st.id = ""
-	st.name = ""
-}
-
-func (st *ScheduledTask) GetID() string {
-	return st.id
-}
-
-func (st *ScheduledTask) GetName() string {
-	return st.name
-}
-
-func (st *ScheduledTask) GetHandleFunc() ScheduledTaskHandleFunc {
-	return st.handleFunc
+func (st *ScheduledTask) GetMetadata() *ScheduledTaskMetadata {
+	return st.metadata
 }
