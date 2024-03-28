@@ -5,9 +5,7 @@ import (
 	"errors"
 	"runtime"
 	"sync"
-	"sync/atomic"
 	"time"
-	"unsafe"
 
 	"github.com/google/uuid"
 )
@@ -20,7 +18,7 @@ var (
 
 var DefaultScheduledTaskHandleFunc ScheduledTaskHandleFunc = func(done WaitForCtxDone) (data any, err error) { return nil, nil }
 
-var taskPool = sync.Pool{New: func() interface{} { return &ScheduledTask{once: new(sync.Once), metadata: &ScheduledTaskMetadata{}} }}
+var taskPool = sync.Pool{New: func() interface{} { return &ScheduledTask{metadata: &ScheduledTaskMetadata{}} }}
 
 type ScheduledTaskMetadata struct {
 	id         string
@@ -52,7 +50,7 @@ type ScheduledTask struct {
 	parentCtx context.Context
 	ctx       context.Context
 	cancel    context.CancelCauseFunc
-	once      *sync.Once
+	once      sync.Once
 	wg        sync.WaitGroup
 }
 
@@ -79,6 +77,7 @@ func NewScheduledTask(parentCtx context.Context, name string, handleFunc Schedul
 	task.parentCtx = parentCtx
 	task.ctx, task.cancel = context.WithCancelCause(parentCtx)
 	task.wg = sync.WaitGroup{}
+	task.once = sync.Once{}
 
 	task.wg.Add(1)
 	go task.executor()
@@ -97,8 +96,6 @@ func (st *ScheduledTask) Stop() {
 
 		taskPool.Put(st)
 	})
-
-	atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&st.once)), unsafe.Pointer(new(sync.Once)))
 }
 
 func (st *ScheduledTask) executor() {
