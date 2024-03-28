@@ -40,50 +40,105 @@ func (tc *testParentCancelTaskCallback) OnExecuted(id, name string, data any, re
 }
 
 func TestTask_Standard(t *testing.T) {
-	parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*200)
-	defer parentCancel()
+	t.Run("timeout is less than waiting", func(t *testing.T) {
+		parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*200)
+		defer parentCancel()
 
-	name := "standard task"
-	handleFunc := func(ctx context.Context) (any, error) {
-		// handle task logic here
-		return "lee", nil
-	}
+		name := "standard task"
+		handleFunc := func(ctx context.Context) (any, error) {
+			// handle task logic here
+			return "lee", nil
+		}
 
-	task := NewTask(parentCtx, name, handleFunc, &testStandardTaskCallback{t: t})
-	defer task.Stop()
+		task := NewTask(parentCtx, name, handleFunc, &testStandardTaskCallback{t: t})
+		defer task.Stop()
 
-	time.Sleep(time.Millisecond * 500)
-}
+		time.Sleep(time.Millisecond * 500)
+	})
 
-func TestTask_ParentCancel(t *testing.T) {
-	parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*200)
+	t.Run("timeout is greater than waiting", func(t *testing.T) {
+		parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*1000)
+		defer parentCancel()
 
-	name := "parent cancel task"
-	handleFunc := func(ctx context.Context) (any, error) {
-		// handle task logic here
-		return "lee", nil
-	}
+		name := "standard task"
+		handleFunc := func(ctx context.Context) (any, error) {
+			// handle task logic here
+			return "lee", nil
+		}
 
-	task := NewTask(parentCtx, name, handleFunc, &testParentCancelTaskCallback{t: t})
-	defer task.Stop()
+		task := NewTask(parentCtx, name, handleFunc, &testStandardTaskCallback{t: t})
+		defer task.Stop()
 
-	parentCancel()
-
-	time.Sleep(time.Millisecond * 500)
+		time.Sleep(time.Millisecond * 500)
+	})
 }
 
 func TestTask_EarlyStop(t *testing.T) {
-	parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*1000)
-	defer parentCancel()
+	t.Run("timeout is less than waiting", func(t *testing.T) {
+		parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*200)
+		defer parentCancel()
 
-	name := "early stop task"
-	handleFunc := func(ctx context.Context) (any, error) {
-		// handle task logic here
-		return "lee", nil
-	}
+		name := "early stop task"
+		handleFunc := func(ctx context.Context) (any, error) {
+			// handle task logic here
+			return "lee", nil
+		}
 
-	task := NewTask(parentCtx, name, handleFunc, &testEarlyStopTaskCallback{t: t})
-	task.Stop()
+		task := NewTask(parentCtx, name, handleFunc, &testEarlyStopTaskCallback{t: t})
+		task.Stop()
 
-	time.Sleep(time.Millisecond * 500)
+		time.Sleep(time.Millisecond * 500)
+	})
+
+	t.Run("timeout is greater than waiting", func(t *testing.T) {
+		parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*1000)
+		defer parentCancel()
+
+		name := "early stop task"
+		handleFunc := func(ctx context.Context) (any, error) {
+			// handle task logic here
+			return "lee", nil
+		}
+
+		task := NewTask(parentCtx, name, handleFunc, &testEarlyStopTaskCallback{t: t})
+		task.Stop()
+
+		time.Sleep(time.Millisecond * 500)
+	})
+}
+
+func TestTask_ParentCancel(t *testing.T) {
+	t.Run("timeout is less than waiting", func(t *testing.T) {
+		parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*200)
+
+		name := "parent cancel task"
+		handleFunc := func(ctx context.Context) (any, error) {
+			// handle task logic here
+			return "lee", nil
+		}
+
+		task := NewTask(parentCtx, name, handleFunc, &testParentCancelTaskCallback{t: t})
+		defer task.Stop()
+
+		parentCancel()
+
+		time.Sleep(time.Millisecond * 500)
+	})
+
+	t.Run("timeout is greater than waiting", func(t *testing.T) {
+		parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*1000)
+
+		name := "parent cancel task"
+		handleFunc := func(ctx context.Context) (any, error) {
+			// handle task logic here
+			return "lee", nil
+		}
+
+		task := NewTask(parentCtx, name, handleFunc, &testParentCancelTaskCallback{t: t})
+		defer task.Stop()
+
+		parentCancel()
+
+		time.Sleep(time.Millisecond * 500)
+	})
 }
