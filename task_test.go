@@ -66,9 +66,10 @@ func TestTask_Standard(t *testing.T) {
 			return "lee", nil
 		}
 
-		task := NewTask(parentCtx, name, handleFunc, &testStandardTaskCallback{t: t})
+		task := NewTask(parentCtx, name, handleFunc, &testEarlyStopTaskCallback{t: t})
 		defer task.Stop()
 
+		// timeout ctx not cancel, task should be executed after waiting. so trigger the early stop by self ctx
 		time.Sleep(time.Millisecond * 500)
 	})
 }

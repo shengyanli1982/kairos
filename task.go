@@ -5,7 +5,9 @@ import (
 	"errors"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
+	"unsafe"
 
 	"github.com/google/uuid"
 )
@@ -18,7 +20,7 @@ var (
 
 var DefaultTaskHandleFunc TaskHandleFunc = func(ctx context.Context) (data any, err error) { return nil, nil }
 
-var taskPool = sync.Pool{New: func() interface{} { return &Task{} }}
+var taskPool = sync.Pool{New: func() interface{} { return &Task{once: new(sync.Once)} }}
 
 type Task struct {
 	id         string
@@ -28,7 +30,7 @@ type Task struct {
 	parentCtx  context.Context
 	ctx        context.Context
 	cancel     context.CancelCauseFunc
-	once       sync.Once
+	once       *sync.Once
 	wg         sync.WaitGroup
 }
 
@@ -46,6 +48,7 @@ func NewTask(parentCtx context.Context, name string, handleFunc TaskHandleFunc, 
 	}
 
 	task := taskPool.Get().(*Task)
+
 	task.id = uuid.NewString()
 	task.name = name
 	task.callback = callback
@@ -61,15 +64,18 @@ func NewTask(parentCtx context.Context, name string, handleFunc TaskHandleFunc, 
 
 func (t *Task) Stop() {
 	t.once.Do(func() {
+
 		t.cancel(ErrorTaskEarlyReturn)
+
 		t.wg.Wait()
+
 		taskPool.Put(t)
 	})
+
+	atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&t.once)), unsafe.Pointer(new(sync.Once)))
 }
 
 func (t *Task) executor() {
-	var result any
-	var err error
 
 	taskTrigger := time.NewTicker(time.Millisecond * 500)
 
@@ -80,19 +86,26 @@ func (t *Task) executor() {
 
 	for {
 		select {
+
 		case <-t.ctx.Done():
+
 			switch context.Cause(t.ctx) {
+
 			case context.Canceled:
 				t.callback.OnExecuted(t.id, t.name, nil, ErrorTaskCanceled, nil)
 				t.cancel(context.Canceled)
+
 			case context.DeadlineExceeded:
-				result, err = t.handleFunc(t.ctx)
+				result, err := t.handleFunc(t.ctx)
 				t.callback.OnExecuted(t.id, t.name, result, ErrorTaskTimeout, err)
+
 			case ErrorTaskEarlyReturn:
-				result, err = t.handleFunc(t.ctx)
+				result, err := t.handleFunc(t.ctx)
 				t.callback.OnExecuted(t.id, t.name, result, ErrorTaskEarlyReturn, err)
 			}
+
 			return
+
 		case <-taskTrigger.C:
 			runtime.Gosched()
 		}
