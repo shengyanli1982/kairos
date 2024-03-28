@@ -38,7 +38,7 @@ func (stm *ScheduledTaskMetadata) GetHandleFunc() ScheduledTaskHandleFunc {
 	return stm.handleFunc
 }
 
-func (stm *ScheduledTaskMetadata) Reset() {
+func (stm *ScheduledTaskMetadata) reset() {
 	stm.id = ""
 	stm.name = ""
 	stm.handleFunc = nil
@@ -50,8 +50,8 @@ type ScheduledTask struct {
 	parentCtx context.Context
 	ctx       context.Context
 	cancel    context.CancelCauseFunc
-	once      sync.Once
-	wg        sync.WaitGroup
+	once      *sync.Once
+	wg        *sync.WaitGroup
 }
 
 func NewScheduledTask(parentCtx context.Context, name string, handleFunc ScheduledTaskHandleFunc, callback ScheduledTaskCallback) *ScheduledTask {
@@ -76,8 +76,8 @@ func NewScheduledTask(parentCtx context.Context, name string, handleFunc Schedul
 	task.callback = callback
 	task.parentCtx = parentCtx
 	task.ctx, task.cancel = context.WithCancelCause(parentCtx)
-	task.wg = sync.WaitGroup{}
-	task.once = sync.Once{}
+	task.wg = &sync.WaitGroup{}
+	task.once = &sync.Once{}
 
 	task.wg.Add(1)
 	go task.executor()
@@ -92,7 +92,7 @@ func (st *ScheduledTask) Stop() {
 
 		st.wg.Wait()
 
-		st.metadata.Reset()
+		st.reset()
 
 		taskPool.Put(st)
 	})
@@ -133,6 +133,16 @@ func (st *ScheduledTask) executor() {
 			runtime.Gosched()
 		}
 	}
+}
+
+func (st *ScheduledTask) reset() {
+	st.metadata.reset()
+	st.callback = nil
+	st.parentCtx = nil
+	st.ctx = nil
+	st.cancel = nil
+	st.wg = nil
+	st.once = nil
 }
 
 func (st *ScheduledTask) GetMetadata() *ScheduledTaskMetadata {
