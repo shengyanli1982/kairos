@@ -50,6 +50,50 @@ var defaultFinishedHandleFunc onFinishedHandleFunc = func(metadata *TaskMetadata
 // taskPool is a sync pool used to store and reuse Task objects
 var taskPool = sync.Pool{New: func() interface{} { return &Task{metadata: &TaskMetadata{}} }}
 
+// taskRefPool 是一个 sync.Pool 类型的变量，用于存储任务引用池。
+// taskRefPool is a variable of type sync.Pool, used to store the task reference pool.
+var taskRefPool = sync.Pool{New: func() any { return &TaskRef{parentRef: &ParentRef{}} }}
+
+// ParentRef 结构体包含一个上下文和一个取消函数。
+// The ParentRef struct contains a context and a cancel function.
+type ParentRef struct {
+	// ctx 是上下文对象，它可以用于传递请求范围的值、取消信号、截止时间等
+	// ctx is a context object, which can be used to pass request-scoped values, cancellation signals, deadlines, etc.
+	ctx context.Context
+
+	// cancel 是一个取消函数，它可以用于取消与 ctx 关联的操作
+	// cancel is a cancel function, which can be used to cancel operations associated with ctx
+	cancel context.CancelFunc
+}
+
+// TaskRef 结构体包含一个父引用和一个任务。
+// The TaskRef struct contains a parent reference and a task.
+type TaskRef struct {
+	// parentRef 是一个指向 ParentRef 的指针，它表示任务的父引用
+	// parentRef is a pointer to ParentRef, which represents the parent reference of the task
+	parentRef *ParentRef
+
+	// task 是一个指向 Task 的指针，它表示任务本身
+	// task is a pointer to Task, which represents the task itself
+	task *Task
+}
+
+// Reset 方法重置任务引用的父引用和任务。
+// The Reset method resets the parent reference and task of the task reference.
+func (ref *TaskRef) Reset() {
+	// 重置父引用的上下文
+	// Reset the context of the parent reference
+	ref.parentRef.ctx = nil
+
+	// 重置父引用的取消函数
+	// Reset the cancel function of the parent reference
+	ref.parentRef.cancel = nil
+
+	// 重置任务
+	// Reset the task
+	ref.task = nil
+}
+
 // TaskMetadata 结构体包含任务的 id、name 和 handleFunc
 // The TaskMetadata struct contains the id, name and handleFunc of the task
 type TaskMetadata struct {
@@ -202,11 +246,9 @@ func (t *Task) executor() {
 		// Put the task back into the task pool
 		taskPool.Put(t)
 
-		// 如果 onFinFunc 不为 nil，则调用它
-		// If onFinFunc is not nil, call it
-		if t.onFinFunc != nil {
-			t.onFinFunc(t.metadata)
-		}
+		// 调用 onFinFunc 回调函数，传入任务的元数据
+		// Call the onFinFunc callback function, passing in the metadata of the task
+		t.onFinFunc(t.metadata)
 	}()
 
 	// 使用 for 循环和 select 语句来监听和处理事件
