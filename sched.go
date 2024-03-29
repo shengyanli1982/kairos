@@ -9,7 +9,7 @@ import (
 )
 
 type Scheduler struct {
-	config       *Config
+	cfg          *Config
 	taskCache    *cache.Cache
 	taskCtxCache *cache.Cache
 	ctx          context.Context
@@ -21,7 +21,7 @@ func New(conf *Config) *Scheduler {
 	conf = isConfigValid(conf)
 
 	s := &Scheduler{
-		config:       conf,
+		cfg:          conf,
 		taskCache:    cache.NewCache(),
 		taskCtxCache: cache.NewCache(),
 		once:         sync.Once{},
@@ -36,14 +36,12 @@ func (s *Scheduler) Stop() {
 	s.once.Do(func() {
 		s.cancel()
 
-		s.taskCtxCache.Cleanup(func(data any) {
-			cancel := data.(context.CancelFunc)
-			cancel()
+		s.taskCache.Cleanup(func(data any) {
+			data.(*Task).Cancel()
 		})
 
-		s.taskCache.Cleanup(func(data any) {
-			t := data.(*Task)
-			t.Cancel()
+		s.taskCtxCache.Cleanup(func(data any) {
+			data.(context.CancelFunc)()
 		})
 	})
 }
@@ -65,7 +63,7 @@ func (s *Scheduler) SetAt(name string, handleFunc TaskHandleFunc, execAt time.Ti
 
 	id := s.add(ctx, cancel, name, handleFunc)
 
-	s.config.callback.OnTaskAdd(id, name, execAt)
+	s.cfg.callback.OnTaskAdd(id, name, execAt)
 
 	return id
 }
@@ -78,15 +76,25 @@ func (s *Scheduler) Get(id string) *Task {
 	if task, ok := s.taskCache.Get(id); ok {
 		return task.(*Task)
 	}
+
 	return nil
 }
 
 func (s *Scheduler) Delete(id string) {
-	taskName := "unknown"
+	taskName := ""
+
 	if task, ok := s.taskCache.Get(id); ok {
 		taskName = task.(*Task).GetMetadata().GetName()
 		s.taskCache.Delete(id)
+		task.(*Task).Wait()
+	}
+
+	if cancel, ok := s.taskCtxCache.Get(id); ok {
+		cancel.(context.CancelFunc)()
 		s.taskCtxCache.Delete(id)
 	}
-	s.config.callback.OnTaskRemoved(id, taskName)
+
+	if taskName != "" {
+		s.cfg.callback.OnTaskRemoved(id, taskName)
+	}
 }
