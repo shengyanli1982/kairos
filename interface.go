@@ -2,9 +2,9 @@ package kairos
 
 type WaitForCtxDone = <-chan struct{}
 
-type ScheduledTaskHandleFunc = func(done WaitForCtxDone) (data any, err error)
+type TaskHandleFunc = func(done WaitForCtxDone) (data any, err error)
 
-type ScheduledTaskCallback interface {
+type TaskCallback interface {
 	OnExecuted(id, name string, data any, reason, err error)
 }
 

@@ -39,7 +39,7 @@ func (tc *testParentCancelTaskCallback) OnExecuted(id, name string, data any, re
 	assert.ErrorIs(tc.t, reason, ErrorTaskCanceled, "task should be canceled by parent ctx cancel")
 }
 
-func TestScheduledTask_Standard(t *testing.T) {
+func TestTask_Standard(t *testing.T) {
 	t.Run("timeout is less than waiting", func(t *testing.T) {
 		parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*200)
 		defer parentCancel()
@@ -50,8 +50,8 @@ func TestScheduledTask_Standard(t *testing.T) {
 			return "lee", nil
 		}
 
-		task := NewScheduledTask(parentCtx, name, handleFunc, &testStandardTaskCallback{t: t})
-		defer task.Stop()
+		task := NewTask(parentCtx, name, handleFunc, &testStandardTaskCallback{t: t})
+		defer task.EarlyReturn()
 
 		time.Sleep(time.Millisecond * 500)
 	})
@@ -66,15 +66,15 @@ func TestScheduledTask_Standard(t *testing.T) {
 			return "lee", nil
 		}
 
-		task := NewScheduledTask(parentCtx, name, handleFunc, &testEarlyStopTaskCallback{t: t})
-		defer task.Stop()
+		task := NewTask(parentCtx, name, handleFunc, &testEarlyStopTaskCallback{t: t})
+		defer task.EarlyReturn()
 
 		// timeout ctx not cancel, task should be executed after waiting. so trigger the early stop by self ctx
 		time.Sleep(time.Millisecond * 500)
 	})
 }
 
-func TestScheduledTask_EarlyStop(t *testing.T) {
+func TestTask_EarlyStop(t *testing.T) {
 	t.Run("timeout is less than waiting", func(t *testing.T) {
 		parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*200)
 		defer parentCancel()
@@ -85,8 +85,8 @@ func TestScheduledTask_EarlyStop(t *testing.T) {
 			return "lee", nil
 		}
 
-		task := NewScheduledTask(parentCtx, name, handleFunc, &testEarlyStopTaskCallback{t: t})
-		task.Stop()
+		task := NewTask(parentCtx, name, handleFunc, &testEarlyStopTaskCallback{t: t})
+		task.EarlyReturn()
 
 		time.Sleep(time.Millisecond * 500)
 	})
@@ -101,14 +101,14 @@ func TestScheduledTask_EarlyStop(t *testing.T) {
 			return "lee", nil
 		}
 
-		task := NewScheduledTask(parentCtx, name, handleFunc, &testEarlyStopTaskCallback{t: t})
-		task.Stop()
+		task := NewTask(parentCtx, name, handleFunc, &testEarlyStopTaskCallback{t: t})
+		task.EarlyReturn()
 
 		time.Sleep(time.Millisecond * 500)
 	})
 }
 
-func TestScheduledTask_ParentCancel(t *testing.T) {
+func TestTask_ParentCancel(t *testing.T) {
 	t.Run("timeout is less than waiting", func(t *testing.T) {
 		parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*200)
 
@@ -118,8 +118,8 @@ func TestScheduledTask_ParentCancel(t *testing.T) {
 			return "lee", nil
 		}
 
-		task := NewScheduledTask(parentCtx, name, handleFunc, &testParentCancelTaskCallback{t: t})
-		defer task.Stop()
+		task := NewTask(parentCtx, name, handleFunc, &testParentCancelTaskCallback{t: t})
+		defer task.EarlyReturn()
 
 		parentCancel()
 
@@ -135,8 +135,8 @@ func TestScheduledTask_ParentCancel(t *testing.T) {
 			return "lee", nil
 		}
 
-		task := NewScheduledTask(parentCtx, name, handleFunc, &testParentCancelTaskCallback{t: t})
-		defer task.Stop()
+		task := NewTask(parentCtx, name, handleFunc, &testParentCancelTaskCallback{t: t})
+		defer task.EarlyReturn()
 
 		parentCancel()
 
@@ -144,7 +144,7 @@ func TestScheduledTask_ParentCancel(t *testing.T) {
 	})
 }
 
-func TestScheduledTask_WaitingForCtxDone(t *testing.T) {
+func TestTask_WaitingForCtxDone(t *testing.T) {
 	parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*200)
 	defer parentCancel()
 
@@ -160,8 +160,32 @@ func TestScheduledTask_WaitingForCtxDone(t *testing.T) {
 		}
 	}
 
-	task := NewScheduledTask(parentCtx, name, handleFunc, &testEarlyStopTaskCallback{t: t})
-	task.Stop()
+	task := NewTask(parentCtx, name, handleFunc, &testEarlyStopTaskCallback{t: t})
+	task.EarlyReturn()
 
 	time.Sleep(time.Millisecond * 500)
+}
+
+func TestTask_OnFinished(t *testing.T) {
+	t.Run("onFinished function is set correctly", func(t *testing.T) {
+
+		parentCtx, parentCancel := context.WithTimeout(context.Background(), time.Millisecond*200)
+		defer parentCancel()
+
+		name := "onfinished task"
+		handleFunc := func(done WaitForCtxDone) (any, error) {
+			// handle task logic here
+			return "lee", nil
+		}
+
+		finFunc := func(m *TaskMetadata) {
+			fmt.Printf("Task finished, id: %s, name: %s\n", m.id, m.name)
+		}
+
+		task := NewTask(parentCtx, name, handleFunc, &testStandardTaskCallback{t: t}).OnFinished(finFunc)
+		defer task.EarlyReturn()
+
+		time.Sleep(time.Millisecond * 500)
+
+	})
 }
