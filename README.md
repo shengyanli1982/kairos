@@ -71,7 +71,27 @@ The `Kairos` provides the following methods:
 -   `Get`: Get the task from the `Scheduler` by the task `id`.
 -   `Delete`: Delete the task from the `Scheduler` by the task `id`.
 
-## 3. Example
+## 3. Task
+
+The `Task` is a crucial concept in `Kairos`. It allows for the execution of specific tasks at designated times. The `Task` object provides the following methods:
+
+-   `GetMetadata`: Retrieves the metadata of the task, which includes methods to obtain task information.
+    1.  `GetID`: Retrieves the task ID.
+    2.  `GetName`: Retrieves the task name.
+    3.  `GetHandleFunc`: Retrieves the task handle function.
+-   `EarlyReturn`: Manually stops task execution and returns early, without waiting for the timeout or cancel signal. It invokes the `handleFunc`.
+-   `Cancel`: Manually stops task execution and returns immediately, without executing the `handleFunc`.
+-   `Wait`: Waits for the task to complete, blocking the current goroutine until the task is finished.
+
+> [!NOTE]
+>
+> The `Wait` method is a blocking method. It is recommended to use it in a separate `goroutine` to avoid blocking the main `goroutine`.
+>
+> If you need to retrieve a task, you can use the `Get` method to obtain the task by its `ID`. Once you have the task, you can use the `Wait` method to wait for its completion.
+>
+> There is no need to manually stop a task. After the task is executed, its status is automatically cleared in the `Scheduler`. If you want to actively delete a task, you can use the `Delete` method to remove the corresponding task (this should only be done if necessary).
+
+## 4. Example
 
 Example code is located in the `examples` directory.
 
