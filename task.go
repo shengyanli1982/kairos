@@ -10,15 +10,21 @@ import (
 	"github.com/google/uuid"
 )
 
-type OnTaskFinishedHandleFunc = func(metadata *TaskMetadata)
-
 var (
 	ErrorTaskCanceled    = errors.New("task canceled")
 	ErrorTaskTimeout     = errors.New("task timeout")
 	ErrorTaskEarlyReturn = errors.New("task early return")
 )
 
-var DefaultTaskHandleFunc TaskHandleFunc = func(done WaitForCtxDone) (data any, err error) { return nil, nil }
+type onFinishedHandleFunc = func(metadata *TaskMetadata)
+
+type onExecutedHandleFunc = func(id, name string, data any, reason, err error)
+
+var DefaultTaskHandleFunc TaskHandleFunc = func(done WaitForContextDone) (data any, err error) { return nil, nil }
+
+var defaultExecutedHandleFunc onExecutedHandleFunc = func(id, name string, data any, reason, err error) {}
+
+var defaultFinishedHandleFunc onFinishedHandleFunc = func(metadata *TaskMetadata) {}
 
 var taskPool = sync.Pool{New: func() interface{} { return &Task{metadata: &TaskMetadata{}} }}
 
@@ -41,17 +47,17 @@ func (stm *TaskMetadata) GetHandleFunc() TaskHandleFunc {
 }
 
 type Task struct {
-	metadata  *TaskMetadata
-	callback  TaskCallback
-	parentCtx context.Context
-	ctx       context.Context
-	cancel    context.CancelCauseFunc
-	once      *sync.Once
-	wg        *sync.WaitGroup
-	onFinFunc OnTaskFinishedHandleFunc
+	metadata   *TaskMetadata
+	parentCtx  context.Context
+	ctx        context.Context
+	cancel     context.CancelCauseFunc
+	once       *sync.Once
+	wg         *sync.WaitGroup
+	onFinFunc  onFinishedHandleFunc
+	onExecFunc onExecutedHandleFunc
 }
 
-func NewTask(parentCtx context.Context, name string, handleFunc TaskHandleFunc, callback TaskCallback) *Task {
+func NewTask(parentCtx context.Context, name string, handleFunc TaskHandleFunc) *Task {
 	if handleFunc == nil {
 		handleFunc = DefaultTaskHandleFunc
 	}
@@ -60,17 +66,12 @@ func NewTask(parentCtx context.Context, name string, handleFunc TaskHandleFunc, 
 		parentCtx = context.Background()
 	}
 
-	if callback == nil {
-		callback = NewEmptyTaskCallback()
-	}
-
 	task := taskPool.Get().(*Task)
 
 	task.metadata.id = uuid.NewString()
 	task.metadata.name = name
 	task.metadata.handleFunc = handleFunc
 
-	task.callback = callback
 	task.parentCtx = parentCtx
 	task.ctx, task.cancel = context.WithCancelCause(parentCtx)
 	task.wg = &sync.WaitGroup{}
@@ -108,15 +109,15 @@ func (st *Task) executor() {
 			switch reason {
 
 			case context.Canceled:
-				st.callback.OnExecuted(st.metadata.id, st.metadata.name, nil, ErrorTaskCanceled, nil)
+				st.onExecFunc(st.metadata.id, st.metadata.name, nil, ErrorTaskCanceled, nil)
 
 			case context.DeadlineExceeded:
 				result, err := st.metadata.handleFunc(st.ctx.Done())
-				st.callback.OnExecuted(st.metadata.id, st.metadata.name, result, ErrorTaskTimeout, err)
+				st.onExecFunc(st.metadata.id, st.metadata.name, result, ErrorTaskTimeout, err)
 
 			case ErrorTaskEarlyReturn:
 				result, err := st.metadata.handleFunc(st.ctx.Done())
-				st.callback.OnExecuted(st.metadata.id, st.metadata.name, result, ErrorTaskEarlyReturn, err)
+				st.onExecFunc(st.metadata.id, st.metadata.name, result, ErrorTaskEarlyReturn, err)
 			}
 
 			st.cancel(reason)
@@ -153,7 +154,18 @@ func (st *Task) Wait() {
 	st.wg.Wait()
 }
 
-func (st *Task) OnFinished(fn OnTaskFinishedHandleFunc) *Task {
+func (st *Task) onFinished(fn onFinishedHandleFunc) *Task {
+	if fn == nil {
+		fn = defaultFinishedHandleFunc
+	}
 	st.onFinFunc = fn
+	return st
+}
+
+func (st *Task) onExecuted(fn onExecutedHandleFunc) *Task {
+	if fn == nil {
+		fn = defaultExecutedHandleFunc
+	}
+	st.onExecFunc = fn
 	return st
 }

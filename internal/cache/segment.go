@@ -4,17 +4,17 @@ import "sync"
 
 type Segment struct {
 	mutex   sync.Mutex
-	storage map[string]any
+	storage map[string]interface{}
 }
 
 func NewSegment() *Segment {
 	return &Segment{
 		mutex:   sync.Mutex{},
-		storage: make(map[string]any),
+		storage: make(map[string]interface{}),
 	}
 }
 
-func (s *Segment) Get(key string) (any, bool) {
+func (s *Segment) Get(key string) (interface{}, bool) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -22,7 +22,7 @@ func (s *Segment) Get(key string) (any, bool) {
 	return value, exists
 }
 
-func (s *Segment) Set(key string, value any) {
+func (s *Segment) Set(key string, value interface{}) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -43,7 +43,7 @@ func (s *Segment) Count() int {
 	return len(s.storage)
 }
 
-func (s *Segment) Cleanup(fn func(any)) {
+func (s *Segment) Cleanup(fn func(interface{})) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 

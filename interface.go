@@ -1,15 +1,23 @@
 package kairos
 
-type WaitForCtxDone = <-chan struct{}
+import "time"
 
-type TaskHandleFunc = func(done WaitForCtxDone) (data any, err error)
+type WaitForContextDone = <-chan struct{}
 
-type TaskCallback interface {
-	OnExecuted(id, name string, data any, reason, err error)
+type TaskHandleFunc = func(done WaitForContextDone) (data interface{}, err error)
+
+type Callback interface {
+	OnTaskAdd(id, name string, execAt time.Time)
+	OnTaskExecuted(id, name string, data interface{}, reason, err error)
+	OnTaskRemoved(id, name string)
 }
 
-type EmptyTaskCallback struct{}
+type EmptyCallback struct{}
 
-func (EmptyTaskCallback) OnExecuted(id, name string, data any, reason, err error) {}
+func (EmptyCallback) OnTaskExecuted(id, name string, data interface{}, reason, err error) {}
 
-func NewEmptyTaskCallback() *EmptyTaskCallback { return &EmptyTaskCallback{} }
+func (EmptyCallback) OnTaskRemoved(id, name string) {}
+
+func (EmptyCallback) OnTaskAdd(id, name string, execAt time.Time) {}
+
+func NewEmptyTaskCallback() *EmptyCallback { return &EmptyCallback{} }
