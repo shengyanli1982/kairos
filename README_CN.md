@@ -1,46 +1,46 @@
-English | [中文](./README_CN.md)
+[English](./README.md) | 中文
 
 <div align="center" style="position:relative;">
 	<img src="assets/logo.png" alt="logo">
 </div>
 
-# Introduction
+# 介绍
 
-**Kairos** comes from the Greek word for "time". It means the right or opportune moment. It is a library equipped with a predefined timeout mechanism for executing specific tasks.
+**Kairos** 源自希腊语中的“时间”一词，意为正确或适时的时刻。它是一个配备了预定义超时机制的库，用于在特定时刻执行特定任务。
 
-I wanted to simplify my development process and easily set up libraries to perform tasks at specific points in time. During my long-term development work, I realized that I needed to write a lot of code around context, which lacked generality. When something went wrong, it was difficult to pinpoint the source of errors. Much of the business code couldn't be reused across different projects.
+我希望简化我的开发过程，并轻松设置库以在特定时间点执行任务。在长期的开发工作中，我意识到我需要围绕上下文编写大量代码，这缺乏通用性。当出现问题时，很难确定错误的来源。许多业务代码无法在不同项目之间重用。
 
-# Why Kairos
+# 为什么选择 Kairos
 
-To finish my work early and have more time to spend with my family. With this purpose in mind, I have abstracted tedious work tasks into a general function library for easy use. And of course, I want to help you too.
+为了早点完成工作，有更多时间陪伴家人。出于这个目的，我将繁琐的工作任务抽象成了一个通用的函数库，方便使用。当然，我也希望能帮助到你。
 
-**The original intention of my design is:**
+**我设计的初衷是：**
 
-1. **Easy to use**: It doesn't take much time to learn.
-2. **Highly reliable**: Use a small amount of code to complete complex tasks without introducing too many complex toolkits.
-3. **Simple logic**: Use Golang's GMP coroutine model directly.
+1. **易于使用**：学习成本不高。
+2. **高度可靠**：使用少量代码完成复杂任务，而不引入过多复杂的工具包。
+3. **简单逻辑**：直接使用 Golang 的 GMP 协程模型。
 
-# Advantages
+# 优势
 
--   Simple and user-friendly
--   Lightweight with no external dependencies
--   Supports callback functions for custom actions
+-   简单易用
+-   轻量化，无需外部依赖
+-   支持自定义操作的回调函数
 
-# Installation
+# 安装
 
 ```bash
 go get github.com/shengyanli1982/kairos
 ```
 
-# Quick Start
+# 快速入门
 
-`Kairos` is very simple to use. Just few lines of code to get started.
+`Kairos` 的使用非常简单，只需几行代码即可开始。
 
-## 1. Config
+## 1. 配置
 
-`Kairos` has a config object, which can be used to register callback functions. The config object has the following fields:
+`Kairos` 有一个配置对象，可以用于注册回调函数。配置对象具有以下字段：
 
--   `WithCallback`: Register a callback function for the task.
+-   `WithCallback`：为任务注册回调函数。
 
 ```go
 // Callback 是一个接口，定义了任务添加、执行和移除时的回调函数
@@ -60,20 +60,20 @@ type Callback interface {
 }
 ```
 
-## 2. Methods
+## 2. 方法
 
-The `Kairos` provides the following methods:
+`Kairos` 提供以下方法：
 
--   `New`: Create a new `Scheduler` object. The `Scheduler` object is used to manage tasks.
--   `Stop`: Stop the `Scheduler`. If the `Scheduler` object is stopped, all tasks will be stopped and removed.
--   `Set`: Add a task to the `Scheduler`. The `Set` method takes the task `name`, the `delay` time.Duration to execute the task, and `handleFunc` to the task as parameters.
--   `SetAt`: Add a task to the `Scheduler` at a specific time. The `SetAt` method takes the task `name`, the `execAt` time.Time to execute the task, and `handleFunc` to the task as parameters.
--   `Get`: Get the task from the `Scheduler` by the task `id`.
--   `Delete`: Delete the task from the `Scheduler` by the task `id`.
+-   `New`：创建一个新的 `Scheduler` 对象。`Scheduler` 对象用于管理任务。
+-   `Stop`：停止 `Scheduler`。如果 `Scheduler` 对象被停止，所有任务将被停止并移除。
+-   `Set`：向 `Scheduler` 添加一个任务。`Set` 方法接受任务的 `name`、执行任务的延迟时间 `delay`（time.Duration）和任务的处理函数 `handleFunc` 作为参数。
+-   `SetAt`：在特定时间向 `Scheduler` 添加一个任务。`SetAt` 方法接受任务的 `name`、执行任务的时间 `execAt`（time.Time）和任务的处理函数 `handleFunc` 作为参数。
+-   `Get`：通过任务的 `id` 从 `Scheduler` 获取任务。
+-   `Delete`：通过任务的 `id` 从 `Scheduler` 删除任务。
 
-## 3. Example
+## 3. 示例
 
-Example code is located in the `examples` directory.
+示例代码位于 `examples` 目录中。
 
 ```go
 package main
@@ -167,7 +167,7 @@ func main() {
 }
 ```
 
-**Result**
+**执行结果**
 
 ```bash
 $ go run demo.go
