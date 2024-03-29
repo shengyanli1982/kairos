@@ -202,11 +202,9 @@ func (t *Task) executor() {
 		// Put the task back into the task pool
 		taskPool.Put(t)
 
-		// 如果 onFinFunc 不为 nil，则调用它
-		// If onFinFunc is not nil, call it
-		if t.onFinFunc != nil {
-			t.onFinFunc(t.metadata)
-		}
+		// 调用 onFinFunc 回调函数，传入任务的元数据
+		// Call the onFinFunc callback function, passing in the metadata of the task
+		t.onFinFunc(t.metadata)
 	}()
 
 	// 使用 for 循环和 select 语句来监听和处理事件
