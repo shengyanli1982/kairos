@@ -19,10 +19,6 @@ type Scheduler struct {
 	// taskCache is a pointer to the cache.Cache struct, used to store the scheduled tasks.
 	taskCache *cache.Cache
 
-	// taskCtxCache 是一个指向 cache.Cache 结构体的指针，用于存储任务的上下文信息。
-	// taskCtxCache is a pointer to the cache.Cache struct, used to store the context information of tasks.
-	taskCtxCache *cache.Cache
-
 	// ctx 是一个 context.Context 类型的变量，用于存储调度器的上下文信息。
 	// ctx is a variable of type context.Context, used to store the context information of the scheduler.
 	ctx context.Context
@@ -54,10 +50,6 @@ func New(conf *Config) *Scheduler {
 		// The taskCache field is set to a new Cache struct.
 		taskCache: cache.NewCache(),
 
-		// taskCtxCache 字段被设置为一个新的 Cache 结构体。
-		// The taskCtxCache field is set to a new Cache struct.
-		taskCtxCache: cache.NewCache(),
-
 		// once 字段被设置为一个新的 Once 结构体。
 		// The once field is set to a new Once struct.
 		once: sync.Once{},
@@ -85,13 +77,29 @@ func (s *Scheduler) Stop() {
 		// 清理 taskCache，取消所有已经调度的任务。
 		// Clean up taskCache, cancel all scheduled tasks.
 		s.taskCache.Cleanup(func(data any) {
-			data.(*Task).Cancel()
-		})
+			// 将数据转换为任务引用。
+			// Convert the data to a task reference.
+			taskRef := data.(*TaskRef)
 
-		// 清理 taskCtxCache，取消所有任务的上下文。
-		// Clean up taskCtxCache, cancel the context of all tasks.
-		s.taskCtxCache.Cleanup(func(data any) {
-			data.(context.CancelFunc)()
+			// 取消任务。
+			// Cancel the task.
+			taskRef.task.Cancel()
+
+			// 取消父引用的上下文。
+			// Cancel the context of the parent reference.
+			taskRef.parentRef.cancel()
+
+			// 等待任务完成。
+			// Wait for the task to complete.
+			taskRef.task.Wait()
+
+			// 重置任务引用。
+			// Reset the task reference.
+			taskRef.Reset()
+
+			// 将任务引用放回到任务引用池中。
+			// Put the task reference back into the task reference pool.
+			taskRefPool.Put(taskRef)
 		})
 	})
 }
@@ -116,39 +124,46 @@ func (s *Scheduler) add(ctx context.Context, cancel context.CancelFunc, name str
 
 	// 获取任务的 ID。
 	// Get the ID of the task.
-	id := task.GetMetadata().GetID()
+	taskID := task.GetMetadata().GetID()
 
-	// 将任务添加到 taskCache 中。
-	// Add the task to taskCache.
-	s.taskCache.Set(id, task)
+	// 从任务引用池中获取一个任务引用。
+	// Get a task reference from the task reference pool.
+	taskRef := taskRefPool.Get().(*TaskRef)
 
-	// 将任务的取消函数添加到 taskCtxCache 中。
-	// Add the cancel function of the task to taskCtxCache.
-	s.taskCtxCache.Set(id, cancel)
+	// 设置任务引用的父引用的上下文。
+	// Set the context of the parent reference of the task reference.
+	taskRef.parentRef.ctx = ctx
+
+	// 设置任务引用的父引用的取消函数。
+	// Set the cancel function of the parent reference of the task reference.
+	taskRef.parentRef.cancel = cancel
+
+	// 设置任务引用的任务。
+	// Set the task of the task reference.
+	taskRef.task = task
+
+	// 在任务缓存中设置任务引用。
+	// Set the task reference in the task cache.
+	s.taskCache.Set(taskID, taskRef)
 
 	// 返回任务的 ID。
 	// Return the ID of the task.
-	return id
+	return taskID
 }
 
-// SetAt 是一个方法，用于在指定的时间执行任务。
 // SetAt is a method used to execute tasks at a specified time.
 func (s *Scheduler) SetAt(name string, handleFunc TaskHandleFunc, execAt time.Time) string {
-	// 创建一个新的上下文，该上下文将在指定的时间被取消。
 	// Create a new context that will be cancelled at the specified time.
 	ctx, cancel := context.WithDeadline(s.ctx, execAt)
 
-	// 添加新的任务到调度器，并获取任务的 ID。
 	// Add a new task to the scheduler and get the ID of the task.
-	id := s.add(ctx, cancel, name, handleFunc)
+	taskID := s.add(ctx, cancel, name, handleFunc)
 
-	// 调用回调函数，通知任务已经被添加。
 	// Call the callback function to notify that the task has been added.
-	s.cfg.callback.OnTaskAdded(id, name, execAt)
+	s.cfg.callback.OnTaskAdded(taskID, name, execAt)
 
-	// 返回任务的 ID。
 	// Return the ID of the task.
-	return id
+	return taskID
 }
 
 // Set 是一个方法，用于在指定的延迟后执行任务。
@@ -163,11 +178,11 @@ func (s *Scheduler) Set(name string, handleFunc TaskHandleFunc, delay time.Durat
 // Get is a method used to get the task with the specified ID.
 func (s *Scheduler) Get(id string) *Task {
 	// 从 taskCache 中获取任务。
-	// Get the task from taskCache.
-	if task, ok := s.taskCache.Get(id); ok {
+	// Get the data from taskCache.
+	if data, ok := s.taskCache.Get(id); ok {
 		// 如果任务存在，返回任务。
 		// If the task exists, return the task.
-		return task.(*Task)
+		return data.(*TaskRef).task
 	}
 
 	// 如果任务不存在，返回 nil。
@@ -178,43 +193,43 @@ func (s *Scheduler) Get(id string) *Task {
 // Delete 是一个方法，用于删除指定 ID 的任务。
 // Delete is a method used to delete the task with the specified ID.
 func (s *Scheduler) Delete(id string) {
-	// 初始化一个空字符串用于存储任务名称。
-	// Initialize an empty string to store the task name.
-	taskName := ""
-
 	// 从 taskCache 中获取任务。
 	// Get the task from taskCache.
 	if data, ok := s.taskCache.Get(id); ok {
 		// 如果获取成功，将数据转换为 Task 类型。
 		// If the retrieval is successful, convert the data to the Task type.
-		task := data.(*Task)
+		taskRef := data.(*TaskRef)
 
 		// 调用任务的 Cancel 方法来取消任务。
 		// Call the Cancel method of the task to cancel the task.
-		task.Cancel()
+		taskRef.task.Cancel()
 
-		// 如果任务存在，获取任务的名称，并从 taskCache 中删除任务。
-		// If the task exists, get the name of the task and delete the task from taskCache.
-		taskName = task.GetMetadata().GetName()
+		// 调用父引用的 cancel 函数来取消上下文。
+		// Call the cancel function of the parent reference to cancel the context.
+		taskRef.parentRef.cancel()
+
+		// 获取任务的名称。
+		// Get the name of the task.
+		taskName := taskRef.task.GetMetadata().GetName()
+
+		// 从任务缓存中删除这个任务。
+		// Delete this task from the task cache.
 		s.taskCache.Delete(id)
 
 		// 调用任务的 Wait 方法来等待任务完成。
 		// Call the Wait method of the task to wait for the task to complete.
-		task.Wait()
-	}
+		taskRef.task.Wait()
 
-	// 从 taskCtxCache 中获取任务的取消函数。
-	// Get the cancel function of the task from taskCtxCache.
-	if cancel, ok := s.taskCtxCache.Get(id); ok {
-		// 如果取消函数存在，调用取消函数，并从 taskCtxCache 中删除取消函数。
-		// If the cancel function exists, call the cancel function and delete the cancel function from taskCtxCache.
-		cancel.(context.CancelFunc)()
-		s.taskCtxCache.Delete(id)
-	}
+		// 重置任务引用。
+		// Reset the task reference.
+		taskRef.Reset()
 
-	// 如果任务名称不为空，调用回调函数，通知任务已经被删除。
-	// If the task name is not empty, call the callback function to notify that the task has been deleted.
-	if taskName != "" {
+		// 将任务引用放回任务引用池。
+		// Put the task reference back into the task reference pool.
+		taskRefPool.Put(taskRef)
+
+		// 调用回调函数，通知任务已经被删除。
+		// Call the callback function to notify that the task has been deleted.
 		s.cfg.callback.OnTaskRemoved(id, taskName)
 	}
 }
