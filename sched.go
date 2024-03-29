@@ -178,18 +178,29 @@ func (s *Scheduler) Get(id string) *Task {
 // Delete 是一个方法，用于删除指定 ID 的任务。
 // Delete is a method used to delete the task with the specified ID.
 func (s *Scheduler) Delete(id string) {
+	// 初始化一个空字符串用于存储任务名称。
+	// Initialize an empty string to store the task name.
 	taskName := ""
 
 	// 从 taskCache 中获取任务。
 	// Get the task from taskCache.
-	if task, ok := s.taskCache.Get(id); ok {
+	if data, ok := s.taskCache.Get(id); ok {
+		// 如果获取成功，将数据转换为 Task 类型。
+		// If the retrieval is successful, convert the data to the Task type.
+		task := data.(*Task)
+
+		// 调用任务的 Cancel 方法来取消任务。
+		// Call the Cancel method of the task to cancel the task.
+		task.Cancel()
+
 		// 如果任务存在，获取任务的名称，并从 taskCache 中删除任务。
 		// If the task exists, get the name of the task and delete the task from taskCache.
-		taskName = task.(*Task).GetMetadata().GetName()
+		taskName = task.GetMetadata().GetName()
 		s.taskCache.Delete(id)
-		// 等待任务完成。
-		// Wait for the task to complete.
-		task.(*Task).Wait()
+
+		// 调用任务的 Wait 方法来等待任务完成。
+		// Call the Wait method of the task to wait for the task to complete.
+		task.Wait()
 	}
 
 	// 从 taskCtxCache 中获取任务的取消函数。
