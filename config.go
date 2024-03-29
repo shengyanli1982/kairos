@@ -28,10 +28,14 @@ func DefaultConfig() *Config {
 
 // WithCallback 是 Config 的一个方法，用于设置 Config 的 callback 字段
 // WithCallback is a method of Config, used to set the callback field of Config
-func (c *Config) WithCallback(callback Callback) {
+func (c *Config) WithCallback(callback Callback) *Config {
 	// 设置 Config 的 callback 字段为传入的 callback 参数
 	// Set the callback field of Config to the passed-in callback parameter
 	c.callback = callback
+
+	// 返回 Config
+	// Return Config
+	return c
 }
 
 // isConfigValid 是一个函数，用于检查 Config 实例是否有效

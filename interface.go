@@ -13,9 +13,9 @@ type TaskHandleFunc = func(done WaitForContextDone) (data interface{}, err error
 // Callback 是一个接口，定义了任务添加、执行和移除时的回调函数
 // Callback is an interface that defines the callback functions when a task is added, executed, and removed
 type Callback interface {
-	// OnTaskAdd 是当任务被添加时的回调函数，它接收任务 id、任务名称和执行时间作为参数
-	// OnTaskAdd is the callback function when a task is added, it takes the task id, task name, and execution time as parameters
-	OnTaskAdd(id, name string, execAt time.Time)
+	// OnTaskAdded 是当任务被添加时的回调函数，它接收任务 id、任务名称和执行时间作为参数
+	// OnTaskAdded is the callback function when a task is added, it takes the task id, task name, and execution time as parameters
+	OnTaskAdded(id, name string, execAt time.Time)
 
 	// OnTaskExecuted 是当任务被执行时的回调函数，它接收任务 id、任务名称、数据、原因和错误作为参数
 	// OnTaskExecuted is the callback function when a task is executed, it takes the task id, task name, data, reason, and error as parameters
@@ -38,9 +38,9 @@ func (EmptyCallback) OnTaskExecuted(id, name string, data interface{}, reason, e
 // OnTaskRemoved is a method of EmptyCallback, it is a no-op
 func (EmptyCallback) OnTaskRemoved(id, name string) {}
 
-// OnTaskAdd 是 EmptyCallback 的一个方法，它是一个空操作
-// OnTaskAdd is a method of EmptyCallback, it is a no-op
-func (EmptyCallback) OnTaskAdd(id, name string, execAt time.Time) {}
+// OnTaskAdded 是 EmptyCallback 的一个方法，它是一个空操作
+// OnTaskAdded is a method of EmptyCallback, it is a no-op
+func (EmptyCallback) OnTaskAdded(id, name string, execAt time.Time) {}
 
 // NewEmptyTaskCallback 是一个函数，它返回一个新的 EmptyCallback 实例
 // NewEmptyTaskCallback is a function that returns a new instance of EmptyCallback
