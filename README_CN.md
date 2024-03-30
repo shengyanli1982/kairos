@@ -1,3 +1,76 @@
+[English](./README.md) | 中文
+
+<div align="center" style="position:relative;">
+	<img src="assets/logo.png" alt="logo">
+</div>
+
+# 简介
+
+**Kairos** 源自希腊语中的“时间”一词，意为正确或适时的时刻。它是一个带有预定义超时机制的库，用于在特定时刻执行特定任务。
+
+我希望简化我的开发过程，并轻松设置库以在特定时间点执行任务。在长期的开发工作中，我意识到我需要围绕上下文编写大量代码，这缺乏通用性。当出现问题时，很难确定错误的源头。许多业务代码无法在不同项目之间重用。
+
+# 为什么选择 Kairos
+
+为了提前完成工作并有更多时间陪伴家人。出于这个目的，我将繁琐的工作任务抽象成一个通用的函数库，方便使用。当然，我也希望能帮助到你。
+
+**我设计的初衷是：**
+
+1. **易于使用**：不需要花费太多时间学习。
+2. **高度可靠**：使用少量的代码完成复杂的任务，而不引入过多复杂的工具包。
+3. **简单逻辑**：直接使用 Golang 的 GMP 协程模型。
+
+# 优势
+
+-   简单易用
+-   轻量化，无外部依赖
+-   支持自定义操作的回调函数
+
+# 安装
+
+```bash
+go get github.com/shengyanli1982/kairos
+```
+
+# 快速入门
+
+`Kairos` 使用非常简单，只需几行代码即可开始使用。
+
+## 1. 配置
+
+`Kairos` 有一个配置对象，可以用于注册回调函数。配置对象具有以下字段：
+
+-   `WithCallback`：为任务注册回调函数。
+
+```go
+// Callback 是一个接口，定义了任务添加、执行和移除时的回调函数
+// Callback is an interface that defines the callback functions when a task is added, executed, and removed
+type Callback interface {
+	// OnTaskAdded 是当任务被添加时的回调函数，它接收任务 id、任务名称和执行时间作为参数
+	// OnTaskAdded is the callback function when a task is added, it takes the task id, task name, and execution time as parameters
+	OnTaskAdded(id, name string, execAt time.Time)
+
+	// OnTaskExecuted 是当任务被执行时的回调函数，它接收任务 id、任务名称、数据、原因和错误作为参数
+	// OnTaskExecuted is the callback function when a task is executed, it takes the task id, task name, data, reason, and error as parameters
+	OnTaskExecuted(id, name string, data interface{}, reason, err error)
+
+	// OnTaskRemoved 是当任务被移除时的回调函数，它接收任务 id 和任务名称作为参数
+	// OnTaskRemoved is the callback function when a task is removed, it takes the task id and task name as parameters
+	OnTaskRemoved(id, name string)
+}
+```
+
+## 2. 方法
+
+`Kairos` 提供以下方法：
+
+-   `New`：创建一个新的 `Scheduler` 对象。`Scheduler` 对象用于管理任务。
+-   `Stop`：停止 `Scheduler`。如果 `Scheduler` 对象被停止，所有任务将被停止并移除。
+-   `Set`：向 `Scheduler` 添加一个任务。`Set` 方法接受任务的 `name`、执行任务的延迟时间 `delay`（time.Duration）和任务的处理函数 `handleFunc` 作为参数。
+-   `SetAt`：在特定时间向 `Scheduler` 添加一个任务。`SetAt` 方法接受任务的 `name`、执行任务的时间 `execAt`（time.Time）和任务的处理函数 `handleFunc` 作为参数。
+-   `Get`：通过任务的 `id` 从 `Scheduler` 获取任务。
+-   `Delete`：通过任务的 `id` 从 `Scheduler` 删除任务。
+
 ## 3. 任务
 
 `Task` 是 `Kairos` 中的一个关键概念，它允许在指定的时间执行特定任务。`Task` 对象提供以下方法：
@@ -86,8 +159,8 @@ func main() {
 		// Add a new task to the scheduler and get the ID of the task.
 		taskID := scheduler.Set(taskName, func(done ks.WaitForContextDone) (result any, err error) {
 
-			// 当任务完成时，返回任务的名称
-			// When the task is done, return the name of the task
+			// 当任务完成时，返回任务的名称 (这步不是必须，只是为了表示函数内部可以接收外部的 ctx 信号)。
+			// When the task is done, return the name of the task (this step is not necessary, just to indicate that the function can receive the ctx signal from the outside).
 			for range done {
 				return taskName, nil
 			}
