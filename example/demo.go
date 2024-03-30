@@ -61,8 +61,8 @@ func main() {
 		// Add a new task to the scheduler and get the ID of the task.
 		taskID := scheduler.Set(taskName, func(done ks.WaitForContextDone) (result any, err error) {
 
-			// 当任务完成时，返回任务的名称
-			// When the task is done, return the name of the task
+			// 当任务完成时，返回任务的名称 (这步不是必须，只是为了表示函数内部可以接收外部的 ctx 信号)。
+			// When the task is done, return the name of the task (this step is not necessary, just to indicate that the function can receive the ctx signal from the outside).
 			for range done {
 				return taskName, nil
 			}
