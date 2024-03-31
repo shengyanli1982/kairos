@@ -151,17 +151,22 @@ func (s *Scheduler) add(ctx context.Context, cancel context.CancelFunc, name str
 	return taskID
 }
 
+// SetAt 是一个方法，用于在指定时间执行任务。
 // SetAt is a method used to execute tasks at a specified time.
 func (s *Scheduler) SetAt(name string, handleFunc TaskHandleFunc, execAt time.Time) string {
+	// 创建一个新的上下文，该上下文将在指定时间被取消。
 	// Create a new context that will be cancelled at the specified time.
 	ctx, cancel := context.WithDeadline(s.ctx, execAt)
 
+	// 添加一个新的任务到调度器，并获取任务的 ID。
 	// Add a new task to the scheduler and get the ID of the task.
 	taskID := s.add(ctx, cancel, name, handleFunc)
 
+	// 调用回调函数，通知任务已被添加。
 	// Call the callback function to notify that the task has been added.
 	s.cfg.callback.OnTaskAdded(taskID, name, execAt)
 
+	// 返回任务的 ID。
 	// Return the ID of the task.
 	return taskID
 }
