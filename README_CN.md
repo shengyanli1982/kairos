@@ -4,6 +4,10 @@
 	<img src="assets/logo.png" alt="logo">
 </div>
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/shengyanli1982/kairos)](https://goreportcard.com/report/github.com/shengyanli1982/kairos)
+[![Build Status](https://github.com/shengyanli1982/kairos/actions/workflows/test.yaml/badge.svg)](https://github.com/shengyanli1982/kairos/actions)
+[![Go Reference](https://pkg.go.dev/badge/github.com/shengyanli1982/kairos.svg)](https://pkg.go.dev/github.com/shengyanli1982/kairos)
+
 # 简介
 
 **Kairos** 源自希腊语中的“时间”一词，意为正确或适时的时刻。它是一个带有预定义超时机制的库，用于在特定时刻执行特定任务。
@@ -70,13 +74,14 @@ type Callback interface {
 -   `SetAt`：在特定时间向 `Scheduler` 添加一个任务。`SetAt` 方法接受任务的 `name`、执行任务的时间 `execAt`（time.Time）和任务的处理函数 `handleFunc` 作为参数。
 -   `Get`：通过任务的 `id` 从 `Scheduler` 获取任务。
 -   `Delete`：通过任务的 `id` 从 `Scheduler` 删除任务。
+-   `Count`: 获取 `Scheduler` 中任务的数量。
 
 ## 3. 任务
 
 `Task` 是 `Kairos` 中的一个关键概念，它允许在指定的时间执行特定任务。`Task` 对象提供以下方法：
 
 -   `GetMetadata`：获取任务的元数据，包括获取任务信息的方法。
-    1.  `GetID`：获取任务的 ID。
+    1.  `GetID`：获取任务的 `id`。
     2.  `GetName`：获取任务的名称。
     3.  `GetHandleFunc`：获取任务的处理函数。
 -   `EarlyReturn`：手动停止任务执行并提前返回，无需等待超时或取消信号。它会调用 `handleFunc`。
@@ -127,7 +132,8 @@ func main() {
 	taskID := scheduler.Set("test_task", func(done ks.WaitForContextDone) (result any, err error) {
 		// 做你想做的任何事情
 		// Do whatever you want to do
-		// ......
+		// 这里我们模拟一个需要 100 毫秒才能完成的任务。
+		// Here we simulate a task that takes 100 milliseconds to complete.
 		time.Sleep(time.Millisecond * 100)
 
 		// 如果任务没有完成，返回 nil。

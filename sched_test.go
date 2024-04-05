@@ -57,7 +57,7 @@ func TestScheduler_Set(t *testing.T) {
 	scheduler.Stop()
 
 	// Assert that all tasks have been executed and removed from the scheduler
-	assert.Equal(t, 0, scheduler.GetTaskCount())
+	assert.Equal(t, 0, scheduler.Count())
 }
 
 // TestScheduler_SetAt is a test function for the SetAt method of the Scheduler
@@ -86,8 +86,9 @@ func TestScheduler_SetAt(t *testing.T) {
 
 	// Stop the scheduler
 	scheduler.Stop()
+
 	// Assert that all tasks have been executed and removed from the scheduler
-	assert.Equal(t, 0, scheduler.GetTaskCount())
+	assert.Equal(t, 0, scheduler.Count())
 }
 
 // TestScheduler_Delete is a test function for the Delete method of the Scheduler
@@ -123,8 +124,9 @@ func TestScheduler_Delete(t *testing.T) {
 
 	// Stop the scheduler
 	scheduler.Stop()
+
 	// Assert that all tasks have been executed and removed from the scheduler
-	assert.Equal(t, 0, scheduler.GetTaskCount())
+	assert.Equal(t, 0, scheduler.Count())
 }
 
 // TestScheduler_Stop is a test function for the Stop method of the Scheduler
@@ -150,6 +152,7 @@ func TestScheduler_Stop(t *testing.T) {
 
 	// Stop the scheduler
 	scheduler.Stop()
+
 	// Assert that all tasks have been stopped and removed from the scheduler
-	assert.Equal(t, 0, scheduler.GetTaskCount())
+	assert.Equal(t, 0, scheduler.Count())
 }
