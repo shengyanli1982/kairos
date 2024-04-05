@@ -1,6 +1,6 @@
 module github.com/shengyanli1982/kairos
 
-go 1.19
+go 1.20
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0
