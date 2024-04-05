@@ -74,13 +74,17 @@ The `Kairos` provides the following methods:
 -   `SetAt`: Add a task to the `Scheduler` at a specific time. The `SetAt` method takes the task `name`, the `execAt` time.Time to execute the task, and `handleFunc` to the task as parameters.
 -   `Get`: Get the task from the `Scheduler` by the task `id`.
 -   `Delete`: Delete the task from the `Scheduler` by the task `id`.
+-   `Count`: Retrieve the number of tasks in the `Scheduler`.
+
+> [!NOTE]
+> If you don't provide a name for a task, it will be automatically named using the task's `id`.
 
 ## 3. Task
 
 The `Task` is a crucial concept in `Kairos`. It allows for the execution of specific tasks at designated times. The `Task` object provides the following methods:
 
 -   `GetMetadata`: Retrieves the metadata of the task, which includes methods to obtain task information.
-    1.  `GetID`: Retrieves the task ID.
+    1.  `GetID`: Retrieves the task `id`.
     2.  `GetName`: Retrieves the task name.
     3.  `GetHandleFunc`: Retrieves the task handle function.
 -   `EarlyReturn`: Manually stops task execution and returns early, without waiting for the timeout or cancel signal. It invokes the `handleFunc`.

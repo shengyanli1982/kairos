@@ -239,9 +239,9 @@ func (s *Scheduler) Delete(id string) {
 	}
 }
 
-// GetTaskCount 是一个方法，用于获取调度器中的任务数量。
-// GetTaskCount is a method used to get the number of tasks in the scheduler.
-func (s *Scheduler) GetTaskCount() int {
+// Count 是一个方法，用于获取调度器中的任务数量。
+// Count is a method used to get the number of tasks in the scheduler.
+func (s *Scheduler) Count() int {
 	// 返回 taskCache 中的元素数量。
 	// Return the number of elements in taskCache.
 	return s.taskCache.Count()
