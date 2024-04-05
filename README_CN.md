@@ -76,9 +76,6 @@ type Callback interface {
 -   `Delete`：通过任务的 `id` 从 `Scheduler` 删除任务。
 -   `Count`: 获取 `Scheduler` 中任务的数量。
 
-> [!NOTE]
-> 如果您没有为任务提供名称，它将自动使用任务的 `id` 命名。
-
 ## 3. 任务
 
 `Task` 是 `Kairos` 中的一个关键概念，它允许在指定的时间执行特定任务。`Task` 对象提供以下方法：

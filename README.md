@@ -76,9 +76,6 @@ The `Kairos` provides the following methods:
 -   `Delete`: Delete the task from the `Scheduler` by the task `id`.
 -   `Count`: Retrieve the number of tasks in the `Scheduler`.
 
-> [!NOTE]
-> If you don't provide a name for a task, it will be automatically named using the task's `id`.
-
 ## 3. Task
 
 The `Task` is a crucial concept in `Kairos`. It allows for the execution of specific tasks at designated times. The `Task` object provides the following methods:
