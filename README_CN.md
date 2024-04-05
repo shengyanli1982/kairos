@@ -4,6 +4,10 @@
 	<img src="assets/logo.png" alt="logo">
 </div>
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/shengyanli1982/kairos)](https://goreportcard.com/report/github.com/shengyanli1982/kairos)
+[![Build Status](https://github.com/shengyanli1982/kairos/actions/workflows/test.yaml/badge.svg)](https://github.com/shengyanli1982/kairos/actions)
+[![Go Reference](https://pkg.go.dev/badge/github.com/shengyanli1982/kairos.svg)](https://pkg.go.dev/github.com/shengyanli1982/kairos)
+
 # 简介
 
 **Kairos** 源自希腊语中的“时间”一词，意为正确或适时的时刻。它是一个带有预定义超时机制的库，用于在特定时刻执行特定任务。
@@ -127,7 +131,8 @@ func main() {
 	taskID := scheduler.Set("test_task", func(done ks.WaitForContextDone) (result any, err error) {
 		// 做你想做的任何事情
 		// Do whatever you want to do
-		// ......
+		// 这里我们模拟一个需要 100 毫秒才能完成的任务。
+		// Here we simulate a task that takes 100 milliseconds to complete.
 		time.Sleep(time.Millisecond * 100)
 
 		// 如果任务没有完成，返回 nil。

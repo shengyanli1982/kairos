@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -186,6 +187,12 @@ func NewTask(parentCtx context.Context, name string, handleFunc TaskHandleFunc) 
 	// 为任务生成一个新的 id
 	// Generate a new id for the task
 	task.metadata.id = uuid.NewString()
+
+	// 如果任务的名称为空或者只包含空格，那么使用任务的 id 作为名称。
+	// If the name of the task is empty or only contains spaces, then use the id of the task as the name.
+	if len(strings.TrimSpace(name)) == 0 {
+		name = task.metadata.id
+	}
 
 	// 设置任务的名称
 	// Set the name of the task
