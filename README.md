@@ -80,7 +80,7 @@ The `Kairos` provides the following methods:
 -   `Delete`: Delete the task from the `Scheduler` by the task `id`.
 -   `Count`: Retrieve the number of tasks in the `Scheduler`.
 
-> [!TIPS]
+> [!TIP]
 >
 > If you want to ensure that tasks in the `Scheduler` are unique, you can use the `WithDisableDuplicated` option to disable duplicated tasks.
 >
@@ -309,47 +309,47 @@ func main() {
 
 ```bash
 $ go run demo.go 
-# [CALLBACK] Task added, id: 4e72057e-6b2f-4ef0-af7a-d3cbb046387b, name: test_task_0, execAt: 2024-04-06 16:05:56.915098 +0800 CST m=+0.200288168
-% [MAIN] Task 0 can be retrieved, id: 4e72057e-6b2f-4ef0-af7a-d3cbb046387b, name: test_task_0
-# [CALLBACK] Task added, id: b98d1420-7703-4951-96b6-6f0b3cce59c9, name: test_task_1, execAt: 2024-04-06 16:05:56.915371 +0800 CST m=+0.200560853
-% [MAIN] Task 1 can be retrieved, id: b98d1420-7703-4951-96b6-6f0b3cce59c9, name: test_task_1
-# [CALLBACK] Task added, id: d2a67103-1347-4c5c-a69c-e2d16ee6ef34, name: test_task_2, execAt: 2024-04-06 16:05:56.915397 +0800 CST m=+0.200586928
-% [MAIN] Task 2 can be retrieved, id: d2a67103-1347-4c5c-a69c-e2d16ee6ef34, name: test_task_2
-# [CALLBACK] Task added, id: cfc96291-d173-4358-b2fb-6b42f541987e, name: test_task_3, execAt: 2024-04-06 16:05:56.915409 +0800 CST m=+0.200599564
-% [MAIN] Task 3 can be retrieved, id: cfc96291-d173-4358-b2fb-6b42f541987e, name: test_task_3
-# [CALLBACK] Task added, id: d26d9235-8fea-4938-a4b1-b5e65e7c1432, name: test_task_4, execAt: 2024-04-06 16:05:56.915433 +0800 CST m=+0.200622964
-% [MAIN] Task 4 can be retrieved, id: d26d9235-8fea-4938-a4b1-b5e65e7c1432, name: test_task_4
-# [CALLBACK] Task added, id: 20f94d73-b362-4b85-97b0-3f2efcf6ff40, name: test_task_5, execAt: 2024-04-06 16:05:56.915445 +0800 CST m=+0.200635368
-% [MAIN] Task 5 can be retrieved, id: 20f94d73-b362-4b85-97b0-3f2efcf6ff40, name: test_task_5
-# [CALLBACK] Task added, id: 7a89c8ec-ff9f-421b-859e-d7616f447241, name: test_task_6, execAt: 2024-04-06 16:05:56.915456 +0800 CST m=+0.200646190
-% [MAIN] Task 6 can be retrieved, id: 7a89c8ec-ff9f-421b-859e-d7616f447241, name: test_task_6
-# [CALLBACK] Task added, id: 821293ab-c308-49e9-b4e3-f8e60c159336, name: test_task_7, execAt: 2024-04-06 16:05:56.915472 +0800 CST m=+0.200662579
-% [MAIN] Task 7 can be retrieved, id: 821293ab-c308-49e9-b4e3-f8e60c159336, name: test_task_7
-# [CALLBACK] Task added, id: 070cde71-2ad6-4153-bcae-088215429ba9, name: test_task_8, execAt: 2024-04-06 16:05:56.915609 +0800 CST m=+0.200799042
-% [MAIN] Task 8 can be retrieved, id: 070cde71-2ad6-4153-bcae-088215429ba9, name: test_task_8
-# [CALLBACK] Task added, id: e170be5c-4e06-4466-a244-661da2b908d5, name: test_task_9, execAt: 2024-04-06 16:05:56.91566 +0800 CST m=+0.200850538
-% [MAIN] Task 9 can be retrieved, id: e170be5c-4e06-4466-a244-661da2b908d5, name: test_task_9
->>> [CALLBACK] Task existed, id: e170be5c-4e06-4466-a244-661da2b908d5, name: test_task_9
-# [CALLBACK] Task added, id: e170be5c-4e06-4466-a244-661da2b908d5, name: test_task_9, execAt: 2024-04-06 16:05:56.915678 +0800 CST m=+0.200867847
-% [MAIN] The duplicate task can be retrieved, id: e170be5c-4e06-4466-a244-661da2b908d5, name: test_task_1
-# [CALLBACK] Task executed, id: 4e72057e-6b2f-4ef0-af7a-d3cbb046387b, name: test_task_0, data: <nil>, reason: task timeout, err: <nil>
-# [CALLBACK] Task removed, id: 4e72057e-6b2f-4ef0-af7a-d3cbb046387b, name: test_task_0
-# [CALLBACK] Task executed, id: 20f94d73-b362-4b85-97b0-3f2efcf6ff40, name: test_task_5, data: <nil>, reason: task timeout, err: <nil>
-# [CALLBACK] Task executed, id: 070cde71-2ad6-4153-bcae-088215429ba9, name: test_task_8, data: <nil>, reason: task timeout, err: <nil>
-# [CALLBACK] Task removed, id: 070cde71-2ad6-4153-bcae-088215429ba9, name: test_task_8
-# [CALLBACK] Task executed, id: cfc96291-d173-4358-b2fb-6b42f541987e, name: test_task_3, data: <nil>, reason: task timeout, err: <nil>
-# [CALLBACK] Task executed, id: e170be5c-4e06-4466-a244-661da2b908d5, name: test_task_9, data: <nil>, reason: task timeout, err: <nil>
-# [CALLBACK] Task executed, id: b98d1420-7703-4951-96b6-6f0b3cce59c9, name: test_task_1, data: <nil>, reason: task timeout, err: <nil>
-# [CALLBACK] Task executed, id: 7a89c8ec-ff9f-421b-859e-d7616f447241, name: test_task_6, data: <nil>, reason: task timeout, err: <nil>
-# [CALLBACK] Task executed, id: 821293ab-c308-49e9-b4e3-f8e60c159336, name: test_task_7, data: <nil>, reason: task timeout, err: <nil>
-# [CALLBACK] Task removed, id: 7a89c8ec-ff9f-421b-859e-d7616f447241, name: test_task_6
-# [CALLBACK] Task removed, id: b98d1420-7703-4951-96b6-6f0b3cce59c9, name: test_task_1
-# [CALLBACK] Task removed, id: e170be5c-4e06-4466-a244-661da2b908d5, name: test_task_9
-# [CALLBACK] Task removed, id: cfc96291-d173-4358-b2fb-6b42f541987e, name: test_task_3
-# [CALLBACK] Task removed, id: 20f94d73-b362-4b85-97b0-3f2efcf6ff40, name: test_task_5
-# [CALLBACK] Task removed, id: 821293ab-c308-49e9-b4e3-f8e60c159336, name: test_task_7
-# [CALLBACK] Task executed, id: d26d9235-8fea-4938-a4b1-b5e65e7c1432, name: test_task_4, data: <nil>, reason: task timeout, err: <nil>
-# [CALLBACK] Task removed, id: d26d9235-8fea-4938-a4b1-b5e65e7c1432, name: test_task_4
-# [CALLBACK] Task executed, id: d2a67103-1347-4c5c-a69c-e2d16ee6ef34, name: test_task_2, data: <nil>, reason: task timeout, err: <nil>
-# [CALLBACK] Task removed, id: d2a67103-1347-4c5c-a69c-e2d16ee6ef34, name: test_task_2
+# [CALLBACK] Task added, id: ec1c1cc9-982b-4bad-b818-3be9f45120a6, name: test_task_0, execAt: 2024-04-06 16:40:06.769283 +0800 CST m=+0.200283861
+% [MAIN] Task 0 can be retrieved, id: ec1c1cc9-982b-4bad-b818-3be9f45120a6, name: test_task_0
+# [CALLBACK] Task added, id: eb63e1f1-4c7f-4664-9b37-6b0d4c087e22, name: test_task_1, execAt: 2024-04-06 16:40:06.769554 +0800 CST m=+0.200554984
+% [MAIN] Task 1 can be retrieved, id: eb63e1f1-4c7f-4664-9b37-6b0d4c087e22, name: test_task_1
+# [CALLBACK] Task added, id: 39219bdf-06ee-45bc-bc41-e4ee76b64987, name: test_task_2, execAt: 2024-04-06 16:40:06.769577 +0800 CST m=+0.200577535
+% [MAIN] Task 2 can be retrieved, id: 39219bdf-06ee-45bc-bc41-e4ee76b64987, name: test_task_2
+# [CALLBACK] Task added, id: dd0e2ce3-8e4e-49e5-a543-c0cd86202880, name: test_task_3, execAt: 2024-04-06 16:40:06.76959 +0800 CST m=+0.200590233
+% [MAIN] Task 3 can be retrieved, id: dd0e2ce3-8e4e-49e5-a543-c0cd86202880, name: test_task_3
+# [CALLBACK] Task added, id: 8d44a0a1-f6af-4b86-a202-bff58a25db0d, name: test_task_4, execAt: 2024-04-06 16:40:06.769609 +0800 CST m=+0.200609710
+% [MAIN] Task 4 can be retrieved, id: 8d44a0a1-f6af-4b86-a202-bff58a25db0d, name: test_task_4
+# [CALLBACK] Task added, id: f8482885-1d4b-45c2-94f5-23dfddb87d24, name: test_task_5, execAt: 2024-04-06 16:40:06.769671 +0800 CST m=+0.200671867
+% [MAIN] Task 5 can be retrieved, id: f8482885-1d4b-45c2-94f5-23dfddb87d24, name: test_task_5
+# [CALLBACK] Task added, id: 1b6a76bd-949c-4467-ab38-c1e9aa9576a6, name: test_task_6, execAt: 2024-04-06 16:40:06.769699 +0800 CST m=+0.200699429
+% [MAIN] Task 6 can be retrieved, id: 1b6a76bd-949c-4467-ab38-c1e9aa9576a6, name: test_task_6
+# [CALLBACK] Task added, id: 1aa633af-b22b-4ebf-a5bb-4a1410ccaa51, name: test_task_7, execAt: 2024-04-06 16:40:06.769712 +0800 CST m=+0.200712896
+% [MAIN] Task 7 can be retrieved, id: 1aa633af-b22b-4ebf-a5bb-4a1410ccaa51, name: test_task_7
+# [CALLBACK] Task added, id: cea3423d-e468-4bd9-bca8-197b1e3ce453, name: test_task_8, execAt: 2024-04-06 16:40:06.769733 +0800 CST m=+0.200733067
+% [MAIN] Task 8 can be retrieved, id: cea3423d-e468-4bd9-bca8-197b1e3ce453, name: test_task_8
+# [CALLBACK] Task added, id: d5442471-2730-4c61-936d-9f7fd89014de, name: test_task_9, execAt: 2024-04-06 16:40:06.769862 +0800 CST m=+0.200862581
+% [MAIN] Task 9 can be retrieved, id: d5442471-2730-4c61-936d-9f7fd89014de, name: test_task_9
+>>> [CALLBACK] Task duplicated , id: d5442471-2730-4c61-936d-9f7fd89014de, name: test_task_9
+# [CALLBACK] Task added, id: d5442471-2730-4c61-936d-9f7fd89014de, name: test_task_9, execAt: 2024-04-06 16:40:06.769883 +0800 CST m=+0.200883229
+% [MAIN] The duplicate task can be retrieved, id: d5442471-2730-4c61-936d-9f7fd89014de, name: test_task_1
+# [CALLBACK] Task executed, id: 1aa633af-b22b-4ebf-a5bb-4a1410ccaa51, name: test_task_7, data: <nil>, reason: task timeout, err: <nil>
+# [CALLBACK] Task executed, id: cea3423d-e468-4bd9-bca8-197b1e3ce453, name: test_task_8, data: <nil>, reason: task timeout, err: <nil>
+# [CALLBACK] Task executed, id: dd0e2ce3-8e4e-49e5-a543-c0cd86202880, name: test_task_3, data: <nil>, reason: task timeout, err: <nil>
+# [CALLBACK] Task executed, id: d5442471-2730-4c61-936d-9f7fd89014de, name: test_task_9, data: <nil>, reason: task timeout, err: <nil>
+# [CALLBACK] Task removed, id: d5442471-2730-4c61-936d-9f7fd89014de, name: test_task_9
+# [CALLBACK] Task executed, id: f8482885-1d4b-45c2-94f5-23dfddb87d24, name: test_task_5, data: <nil>, reason: task timeout, err: <nil>
+# [CALLBACK] Task removed, id: f8482885-1d4b-45c2-94f5-23dfddb87d24, name: test_task_5
+# [CALLBACK] Task removed, id: cea3423d-e468-4bd9-bca8-197b1e3ce453, name: test_task_8
+# [CALLBACK] Task executed, id: 8d44a0a1-f6af-4b86-a202-bff58a25db0d, name: test_task_4, data: <nil>, reason: task timeout, err: <nil>
+# [CALLBACK] Task removed, id: 8d44a0a1-f6af-4b86-a202-bff58a25db0d, name: test_task_4
+# [CALLBACK] Task removed, id: dd0e2ce3-8e4e-49e5-a543-c0cd86202880, name: test_task_3
+# [CALLBACK] Task executed, id: 39219bdf-06ee-45bc-bc41-e4ee76b64987, name: test_task_2, data: <nil>, reason: task timeout, err: <nil>
+# [CALLBACK] Task executed, id: 1b6a76bd-949c-4467-ab38-c1e9aa9576a6, name: test_task_6, data: <nil>, reason: task timeout, err: <nil>
+# [CALLBACK] Task removed, id: 1b6a76bd-949c-4467-ab38-c1e9aa9576a6, name: test_task_6
+# [CALLBACK] Task executed, id: ec1c1cc9-982b-4bad-b818-3be9f45120a6, name: test_task_0, data: <nil>, reason: task timeout, err: <nil>
+# [CALLBACK] Task executed, id: eb63e1f1-4c7f-4664-9b37-6b0d4c087e22, name: test_task_1, data: <nil>, reason: task timeout, err: <nil>
+# [CALLBACK] Task removed, id: 39219bdf-06ee-45bc-bc41-e4ee76b64987, name: test_task_2
+# [CALLBACK] Task removed, id: ec1c1cc9-982b-4bad-b818-3be9f45120a6, name: test_task_0
+# [CALLBACK] Task removed, id: eb63e1f1-4c7f-4664-9b37-6b0d4c087e22, name: test_task_1
+# [CALLBACK] Task removed, id: 1aa633af-b22b-4ebf-a5bb-4a1410ccaa51, name: test_task_7
 ```
