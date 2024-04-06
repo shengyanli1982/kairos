@@ -13,6 +13,10 @@ import (
 // 定义一些常见的任务错误
 // Define some common task errors
 var (
+	// ErrorTaskNotFound 是一个错误，表示没有找到任务。
+	// ErrorTaskNotFound is an error indicating that the task was not found.
+	ErrorTaskNotFound = errors.New("task not found")
+
 	// ErrorTaskCanceled 表示任务被取消
 	// ErrorTaskCanceled represents the task is canceled
 	ErrorTaskCanceled = errors.New("task canceled")

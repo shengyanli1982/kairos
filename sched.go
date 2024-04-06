@@ -2,15 +2,29 @@ package kairos
 
 import (
 	"context"
+	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/shengyanli1982/kairos/internal/cache"
 )
 
+// 定义两个全局的错误变量
+// Define two global error variables
+var (
+	// ErrorSchedulerNotRunning 是一个错误，表示调度器没有运行。
+	// ErrorSchedulerNotRunning is an error indicating that the scheduler is not running.
+	ErrorSchedulerNotRunning = errors.New("scheduler not running")
+)
+
 // Scheduler 结构体定义了一个调度器，它包含了一些用于任务调度的关键字段。
 // The Scheduler struct defines a scheduler, which contains some key fields for task scheduling.
 type Scheduler struct {
+	// running 是一个布尔值，用于标记调度器是否正在运行。
+	// running is a boolean value used to mark whether the scheduler is running.
+	running atomic.Bool
+
 	// cfg 是一个指向 Config 结构体的指针，用于存储调度器的配置信息。
 	// cfg is a pointer to the Config struct, used to store the configuration information of the scheduler.
 	cfg *Config
@@ -46,6 +60,10 @@ func New(conf *Config) *Scheduler {
 	// 然后，我们创建一个新的 Scheduler 结构体，并初始化它的字段。
 	// Then, we create a new Scheduler struct and initialize its fields.
 	s := &Scheduler{
+		// running 字段被设置为一个 atomic.Bool 类型的值。
+		// The running field is set to a value of type atomic.Bool.
+		running: atomic.Bool{},
+
 		// cfg 字段被设置为传入的配置。
 		// The cfg field is set to the passed configuration.
 		cfg: conf,
@@ -67,6 +85,10 @@ func New(conf *Config) *Scheduler {
 	// The ctx and cancel fields are set to a new context with cancellation.
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 
+	// 我们将 running 字段设置为 true，表示调度器已经开始运行。
+	// we set the running field to true, indicating that the scheduler has started running.
+	s.running.Store(true)
+
 	// 最后，我们返回新创建的 Scheduler 结构体的指针。
 	// Finally, we return the pointer to the newly created Scheduler struct.
 	return s
@@ -78,6 +100,10 @@ func (s *Scheduler) Stop() {
 	// 使用 sync.Once 确保停止操作只执行一次。
 	// Use sync.Once to ensure that the stop operation is performed only once.
 	s.once.Do(func() {
+		// 将 running 字段设置为 false，表示调度器已经停止。
+		// Set the running field to false, indicating that the scheduler has stopped.
+		s.running.Store(false)
+
 		// 调用 cancel 函数来取消调度器的上下文，从而停止所有任务。
 		// Call the cancel function to cancel the context of the scheduler, thereby stopping all tasks.
 		s.cancel()
@@ -110,9 +136,9 @@ func (s *Scheduler) Stop() {
 			taskRefPool.Put(taskRef)
 		})
 
-		// 如果调度器的配置中 uniqTask 为 true
-		// If uniqTask in the scheduler's configuration is true
-		if s.cfg.unique {
+		// 如果调度器的配置中 uniqued 为 true
+		// If uniqued in the scheduler's configuration is true
+		if s.cfg.uniqued {
 			// 调用 uniqCache 的 Cleanup 方法，清理其中的所有任务
 			// Call the Cleanup method of uniqCache to clean up all the tasks in it
 			s.uniqCache.Cleanup(func(value any) {})
@@ -123,9 +149,9 @@ func (s *Scheduler) Stop() {
 // add 是一个方法，用于向调度器添加新的任务。
 // add is a method used to add new tasks to the scheduler.
 func (s *Scheduler) add(ctx context.Context, cancel context.CancelFunc, name string, handleFunc TaskHandleFunc) string {
-	// 如果调度器的配置中 uniqTask 为 true
-	// If uniqTask in the scheduler's configuration is true
-	if s.cfg.unique {
+	// 如果调度器的配置中 uniqued 为 true
+	// If uniqued in the scheduler's configuration is true
+	if s.cfg.uniqued {
 		// 从 uniqCache 中获取任务
 		// Get the task from uniqCache
 		if data, ok := s.uniqCache.Get(name); ok {
@@ -162,9 +188,9 @@ func (s *Scheduler) add(ctx context.Context, cancel context.CancelFunc, name str
 	// Get the ID of the task.
 	taskID := task.GetMetadata().GetID()
 
-	// 如果调度器的配置中 unique 为 true
-	// If unique in the scheduler's configuration is true
-	if s.cfg.unique {
+	// 如果调度器的配置中 uniqued 为 true
+	// If uniqued in the scheduler's configuration is true
+	if s.cfg.uniqued {
 		// 在 uniqCache 中设置该任务的 ID
 		// Set the ID of the task in uniqCache
 		s.uniqCache.Set(name, taskID)
@@ -197,7 +223,15 @@ func (s *Scheduler) add(ctx context.Context, cancel context.CancelFunc, name str
 
 // SetAt 是一个方法，用于在指定时间执行任务。
 // SetAt is a method used to execute tasks at a specified time.
-func (s *Scheduler) SetAt(name string, handleFunc TaskHandleFunc, execAt time.Time) string {
+func (s *Scheduler) SetAt(name string, handleFunc TaskHandleFunc, execAt time.Time) (string, error) {
+	// 如果调度器没有运行
+	// If the scheduler is not running
+	if !s.running.Load() {
+		// 返回空字符串和一个表示调度器没有运行的错误
+		// Return an empty string and an error indicating that the scheduler is not running
+		return "", ErrorSchedulerNotRunning
+	}
+
 	// 创建一个新的上下文，该上下文将在指定时间被取消。
 	// Create a new context that will be cancelled at the specified time.
 	ctx, cancel := context.WithDeadline(s.ctx, execAt)
@@ -212,12 +246,12 @@ func (s *Scheduler) SetAt(name string, handleFunc TaskHandleFunc, execAt time.Ti
 
 	// 返回任务的 ID。
 	// Return the ID of the task.
-	return taskID
+	return taskID, nil
 }
 
 // Set 是一个方法，用于在指定的延迟后执行任务。
 // Set is a method used to execute tasks after a specified delay.
-func (s *Scheduler) Set(name string, handleFunc TaskHandleFunc, delay time.Duration) string {
+func (s *Scheduler) Set(name string, handleFunc TaskHandleFunc, delay time.Duration) (string, error) {
 	// 调用 SetAt 方法，将当前时间加上指定的延迟作为执行时间。
 	// Call the SetAt method, adding the specified delay to the current time as the execution time.
 	return s.SetAt(name, handleFunc, time.Now().Add(delay))
@@ -225,23 +259,39 @@ func (s *Scheduler) Set(name string, handleFunc TaskHandleFunc, delay time.Durat
 
 // Get 是一个方法，用于获取指定 ID 的任务。
 // Get is a method used to get the task with the specified ID.
-func (s *Scheduler) Get(id string) *Task {
+func (s *Scheduler) Get(id string) (*Task, error) {
+	// 如果调度器没有运行
+	// If the scheduler is not running
+	if !s.running.Load() {
+		// 返回 nil 和一个表示调度器没有运行的错误
+		// Return nil and an error indicating that the scheduler is not running
+		return nil, ErrorSchedulerNotRunning
+	}
+
 	// 从 taskCache 中获取任务。
 	// Get the data from taskCache.
 	if data, ok := s.taskCache.Get(id); ok {
 		// 如果任务存在，返回任务。
 		// If the task exists, return the task.
-		return data.(*TaskRef).task
+		return data.(*TaskRef).task, nil
 	}
 
 	// 如果任务不存在，返回 nil。
 	// If the task does not exist, return nil.
-	return nil
+	return nil, ErrorTaskNotFound
 }
 
 // Delete 是一个方法，用于删除指定 ID 的任务。
 // Delete is a method used to delete the task with the specified ID.
 func (s *Scheduler) Delete(id string) {
+	// 如果调度器没有运行
+	// If the scheduler is not running
+	if !s.running.Load() {
+		// 直接返回，不执行后续的代码
+		// Return directly, do not execute the following code
+		return
+	}
+
 	// 从 taskCache 中获取任务。
 	// Get the task from taskCache.
 	if data, ok := s.taskCache.Get(id); ok {
@@ -281,9 +331,9 @@ func (s *Scheduler) Delete(id string) {
 		// Call the callback function to notify that the task has been deleted.
 		s.cfg.callback.OnTaskRemoved(id, taskName)
 
-		// 如果调度器的配置中 uniqTask 为 true
-		// If uniqTask in the scheduler's configuration is true
-		if s.cfg.unique {
+		// 如果调度器的配置中 uniqued 为 true
+		// If uniqued in the scheduler's configuration is true
+		if s.cfg.uniqued {
 			// 从 uniqCache 中删除指定名称的任务
 			// Delete the task with the specified name from uniqCache
 			s.uniqCache.Delete(taskName)
