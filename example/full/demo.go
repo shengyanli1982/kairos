@@ -94,11 +94,12 @@ func main() {
 
 	// 添加一个名字存在的任务到调度器，等待触发回调。
 	// Add a task with an existing name to the scheduler and wait for the callback to be triggered.
-	taskID := scheduler.Set("test_task_9", func(done ks.WaitForContextDone) (result any, err error) {
+	repeatTaskName := "test_task_9"
+	taskID := scheduler.Set(repeatTaskName, func(done ks.WaitForContextDone) (result any, err error) {
 		// 当任务完成时，返回任务的名称 (这步不是必须，只是为了表示函数内部可以接收外部的 ctx 信号)。
 		// When the task is done, return the name of the task (this step is not necessary, just to indicate that the function can receive the ctx signal from the outside).
 		for range done {
-			return "test_task_9", nil
+			return repeatTaskName, nil
 		}
 
 		// 如果任务没有完成，返回 nil。
@@ -111,7 +112,7 @@ func main() {
 
 	// 打印任务添加的信息。
 	// Print the information when the task is added.
-	fmt.Printf("%% [MAIN] The duplicate task can be retrieved, id: %s, name: %s\n", taskID, "test_task_1")
+	fmt.Printf("%% [MAIN] The duplicate task can be retrieved, id: %s, name: %s\n", taskID, repeatTaskName)
 
 	// 等待一段时间，让任务有机会执行。
 	// Wait for a while to give the tasks a chance to execute.
