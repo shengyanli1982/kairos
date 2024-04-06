@@ -46,27 +46,29 @@ go get github.com/shengyanli1982/kairos
 
 -   `WithCallback`：为任务注册回调函数。
 
-```go
-// Callback 是一个接口，定义了任务添加、执行和移除时的回调函数
-// Callback is an interface that defines the callback functions when a task is added, executed, and removed
-type Callback interface {
-	// OnTaskAdded 是当任务被添加时的回调函数，它接收任务 id、任务名称和执行时间作为参数
-	// OnTaskAdded is the callback function when a task is added, it takes the task id, task name, and execution time as parameters
-	OnTaskAdded(id, name string, execAt time.Time)
+    ```go
+    // Callback 是一个接口，定义了任务添加、执行和移除时的回调函数
+    // Callback is an interface that defines the callback functions when a task is added, executed, and removed
+    type Callback interface {
+    	// OnTaskAdded 是当任务被添加时的回调函数，它接收任务 id、任务名称和执行时间作为参数
+    	// OnTaskAdded is the callback function when a task is added, it takes the task id, task name, and execution time as parameters
+    	OnTaskAdded(id, name string, execAt time.Time)
 
-	// OnTaskExecuted 是当任务被执行时的回调函数，它接收任务 id、任务名称、数据、原因和错误作为参数
-	// OnTaskExecuted is the callback function when a task is executed, it takes the task id, task name, data, reason, and error as parameters
-	OnTaskExecuted(id, name string, data interface{}, reason, err error)
+    	// OnTaskExecuted 是当任务被执行时的回调函数，它接收任务 id、任务名称、数据、原因和错误作为参数
+    	// OnTaskExecuted is the callback function when a task is executed, it takes the task id, task name, data, reason, and error as parameters
+    	OnTaskExecuted(id, name string, data interface{}, reason, err error)
 
-	// OnTaskRemoved 是当任务被移除时的回调函数，它接收任务 id 和任务名称作为参数
-	// OnTaskRemoved is the callback function when a task is removed, it takes the task id and task name as parameters
-	OnTaskRemoved(id, name string)
+    	// OnTaskRemoved 是当任务被移除时的回调函数，它接收任务 id 和任务名称作为参数
+    	// OnTaskRemoved is the callback function when a task is removed, it takes the task id and task name as parameters
+    	OnTaskRemoved(id, name string)
 
-	// OnTaskDuplicated 是当任务重复时的回调函数，它接收任务 id 和任务名称作为参数
-	// OnTaskDuplicated is the callback function when a task is duplicated, it takes the task id and task name as parameters
-	OnTaskDuplicated(id, name string)
-}
-```
+    	// OnTaskDuplicated 是当任务重复时的回调函数，它接收任务 id 和任务名称作为参数
+    	// OnTaskDuplicated is the callback function when a task is duplicated, it takes the task id and task name as parameters
+    	OnTaskDuplicated(id, name string)
+    }
+    ```
+
+-   `WithDisableDuplicated`: 禁用重复任务。当设置为 `true` 时，`Scheduler` 将不允许具有相同名称的任务。
 
 ## 2. 方法
 
@@ -308,7 +310,7 @@ func main() {
 **执行结果**
 
 ```bash
-$ go run demo.go 
+$ go run demo.go
 # [CALLBACK] Task added, id: ec1c1cc9-982b-4bad-b818-3be9f45120a6, name: test_task_0, execAt: 2024-04-06 16:40:06.769283 +0800 CST m=+0.200283861
 % [MAIN] Task 0 can be retrieved, id: ec1c1cc9-982b-4bad-b818-3be9f45120a6, name: test_task_0
 # [CALLBACK] Task added, id: eb63e1f1-4c7f-4664-9b37-6b0d4c087e22, name: test_task_1, execAt: 2024-04-06 16:40:06.769554 +0800 CST m=+0.200554984
