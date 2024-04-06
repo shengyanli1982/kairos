@@ -46,14 +46,21 @@ func TestScheduler_Set(t *testing.T) {
 	// Add 10 tasks to the scheduler
 	for i := 0; i < 10; i++ {
 		index := i
-		taskID := scheduler.Set("test", func(_ WaitForContextDone) (result any, err error) {
+		taskID, err := scheduler.Set("test", func(_ WaitForContextDone) (result any, err error) {
 			// The task simply returns a string
 			return fmt.Sprintf("test task: %d", index), nil
 		}, time.Millisecond*200)
 
+		// Assert that the task ID is not empty and the error is nil
+		assert.NotEmpty(t, taskID)
+		assert.Nil(t, err)
+
 		// Get the task from the scheduler and assert it's not nil
-		task := scheduler.Get(taskID)
+		task, err := scheduler.Get(taskID)
+
+		// Assert that the task is not nil and the error is nil
 		assert.NotNil(t, task)
+		assert.Nil(t, err)
 	}
 
 	// Sleep for a while to let the tasks execute
@@ -77,14 +84,21 @@ func TestScheduler_SetAt(t *testing.T) {
 	// Add 10 tasks to the scheduler with a specific execution time
 	for i := 0; i < 10; i++ {
 		index := i
-		taskID := scheduler.SetAt("test", func(_ WaitForContextDone) (result any, err error) {
+		taskID, err := scheduler.SetAt("test", func(_ WaitForContextDone) (result any, err error) {
 			// The task simply returns a string
 			return fmt.Sprintf("test task: %d", index), nil
 		}, time.Now().Add(time.Millisecond*200))
 
+		// Assert that the task ID is not empty and the error is nil
+		assert.NotEmpty(t, taskID)
+		assert.Nil(t, err)
+
 		// Get the task from the scheduler and assert it's not nil
-		task := scheduler.Get(taskID)
+		task, err := scheduler.Get(taskID)
+
+		// Assert that the task is not nil and the error is nil
 		assert.NotNil(t, task)
+		assert.Nil(t, err)
 	}
 
 	// Sleep for a while to let the tasks execute
@@ -100,7 +114,7 @@ func TestScheduler_SetAt(t *testing.T) {
 // TestScheduler_Delete is a test function for the Delete method of the Scheduler
 func TestScheduler_Delete(t *testing.T) {
 	// Create a new configuration with the test scheduler callback
-	config := NewConfig().WithCallback(&testSchedCallback{}).WithDisableDuplicated(true)
+	config := NewConfig().WithCallback(&testSchedCallback{}).WithUniqued(true)
 
 	// Create a new scheduler with the configuration
 	scheduler := New(config)
@@ -108,14 +122,21 @@ func TestScheduler_Delete(t *testing.T) {
 	// Add 10 tasks to the scheduler and then delete them
 	for i := 0; i < 10; i++ {
 		index := i
-		taskID := scheduler.SetAt("test", func(_ WaitForContextDone) (result any, err error) {
+		taskID, err := scheduler.SetAt("test", func(_ WaitForContextDone) (result any, err error) {
 			// The task simply returns a string
 			return fmt.Sprintf("test task: %d", index), nil
 		}, time.Now().Add(time.Millisecond*200))
 
+		// Assert that the task ID is not empty and the error is nil
+		assert.NotEmpty(t, taskID)
+		assert.Nil(t, err)
+
 		// Get the task from the scheduler and assert it's not nil
-		task := scheduler.Get(taskID)
+		task, err := scheduler.Get(taskID)
+
+		// Assert that the task is not nil and the error is nil
 		assert.NotNil(t, task)
+		assert.Nil(t, err)
 
 		// Assert that the task and the task reference are in the cache
 		assert.Equal(t, 1, scheduler.uniqCache.Count())
@@ -125,8 +146,11 @@ func TestScheduler_Delete(t *testing.T) {
 		scheduler.Delete(taskID)
 
 		// Get the task from the scheduler again and assert it's now nil
-		task = scheduler.Get(taskID)
+		task, err = scheduler.Get(taskID)
+
+		// Assert that the task is nil and the error is not nil
 		assert.Nil(t, task)
+		assert.ErrorIs(t, err, ErrorTaskNotFound, "Task should not be found")
 	}
 
 	// Sleep for a while to let the tasks execute
@@ -150,14 +174,21 @@ func TestScheduler_Stop(t *testing.T) {
 	// Add 10 tasks to the scheduler
 	for i := 0; i < 10; i++ {
 		index := i
-		taskID := scheduler.SetAt("test", func(_ WaitForContextDone) (result any, err error) {
+		taskID, err := scheduler.SetAt("test", func(_ WaitForContextDone) (result any, err error) {
 			// The task simply returns a string
 			return fmt.Sprintf("test task: %d", index), nil
 		}, time.Now().Add(time.Millisecond*200))
 
+		// Assert that the task ID is not empty and the error is nil
+		assert.NotEmpty(t, taskID)
+		assert.Nil(t, err)
+
 		// Get the task from the scheduler and assert it's not nil
-		task := scheduler.Get(taskID)
+		task, err := scheduler.Get(taskID)
+
+		// Assert that the task is not nil and the error is nil
 		assert.NotNil(t, task)
+		assert.Nil(t, err)
 	}
 
 	// Stop the scheduler
@@ -171,30 +202,44 @@ func TestScheduler_Stop(t *testing.T) {
 // This test is to check if the scheduler can handle duplicated tasks with the same ID
 func TestScheduler_TaskWithoutDuplicated(t *testing.T) {
 	// Create a new configuration with the test scheduler callback
-	config := NewConfig().WithCallback(&testSchedCallback{}).WithDisableDuplicated(true)
+	config := NewConfig().WithCallback(&testSchedCallback{}).WithUniqued(true)
 
 	// Create a new scheduler with the configuration
 	scheduler := New(config)
 
 	// Add a task to the scheduler
-	taskId1 := scheduler.SetAt("test", func(_ WaitForContextDone) (result any, err error) {
+	taskId1, err := scheduler.SetAt("test", func(_ WaitForContextDone) (result any, err error) {
 		// The task simply returns a string
 		return "test task", nil
 	}, time.Now().Add(time.Millisecond*200))
 
+	// Assert that the task ID is not empty and the error is nil
+	assert.NotEmpty(t, taskId1)
+	assert.Nil(t, err)
+
 	// Get the task from the scheduler and assert it's not nil
-	task := scheduler.Get(taskId1)
+	task, err := scheduler.Get(taskId1)
+
+	// Assert that the task is not nil and the error is nil
 	assert.NotNil(t, task)
+	assert.Nil(t, err)
 
 	// Add a task with the same ID to the scheduler
-	taskId2 := scheduler.SetAt("test", func(_ WaitForContextDone) (result any, err error) {
+	taskId2, err := scheduler.SetAt("test", func(_ WaitForContextDone) (result any, err error) {
 		// The task simply returns a string
 		return "test task", nil
 	}, time.Now().Add(time.Millisecond*200))
 
+	// Assert that the task ID is not empty and the error is nil
+	assert.NotEmpty(t, taskId2)
+	assert.Nil(t, err)
+
 	// Get the task from the scheduler and assert it's not nil
-	task = scheduler.Get(taskId2)
+	task, err = scheduler.Get(taskId2)
+
+	// Assert that the task is not nil and the error is nil
 	assert.NotNil(t, task)
+	assert.Nil(t, err)
 
 	// Assert that the task IDs are equal
 	assert.Equal(t, taskId1, taskId2, "Task IDs should be equal")
@@ -203,14 +248,21 @@ func TestScheduler_TaskWithoutDuplicated(t *testing.T) {
 	time.Sleep(time.Millisecond * 500)
 
 	// Add a task with the same ID to the scheduler
-	taskId3 := scheduler.SetAt("test", func(_ WaitForContextDone) (result any, err error) {
+	taskId3, err := scheduler.SetAt("test", func(_ WaitForContextDone) (result any, err error) {
 		// The task simply returns a string
 		return "test task", nil
 	}, time.Now().Add(time.Millisecond*200))
 
+	// Assert that the task ID is not empty and the error is nil
+	assert.NotEmpty(t, taskId3)
+	assert.Nil(t, err)
+
 	// Get the task from the scheduler and assert it's not nil
-	task = scheduler.Get(taskId3)
+	task, err = scheduler.Get(taskId3)
+
+	// Assert that the task is not nil and the error is nil
 	assert.NotNil(t, task)
+	assert.Nil(t, err)
 
 	// Assert that the task IDs are not equal
 	assert.NotEqual(t, taskId1, taskId3, "Task IDs should not be equal")

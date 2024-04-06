@@ -48,7 +48,7 @@ func (tc *demoSchedCallback) OnTaskDuplicated(id, name string) {
 func main() {
 	// 创建一个新的配置，并设置回调函数。
 	// Create a new configuration and set the callback function.
-	config := ks.NewConfig().WithCallback(&demoSchedCallback{}).WithDisableDuplicated(true)
+	config := ks.NewConfig().WithCallback(&demoSchedCallback{}).WithUniqued(true)
 
 	// 使用配置创建一个新的调度器。
 	// Create a new scheduler with the configuration.
@@ -67,7 +67,7 @@ func main() {
 
 		// 添加一个新的任务到调度器，并获取任务的 ID。
 		// Add a new task to the scheduler and get the ID of the task.
-		taskID := scheduler.Set(taskName, func(done ks.WaitForContextDone) (result any, err error) {
+		taskID, err := scheduler.Set(taskName, func(done ks.WaitForContextDone) (result any, err error) {
 
 			// 当任务完成时，返回任务的名称 (这步不是必须，只是为了表示函数内部可以接收外部的 ctx 信号)。
 			// When the task is done, return the name of the task (this step is not necessary, just to indicate that the function can receive the ctx signal from the outside).
@@ -83,9 +83,33 @@ func main() {
 			// Set the delay time of the task to 200 milliseconds.
 		}, time.Millisecond*200)
 
+		// 如果设置任务时出现错误
+		// If an error occurs when setting the task
+		if err != nil {
+			// 打印错误信息。
+			// Print the error message.
+			fmt.Printf("%% [MAIN] Error: %s\n", err.Error())
+
+			// 返回主函数，不执行后续的代码。
+			// Return to the main function, do not execute the following code.
+			return
+		}
+
 		// 获取任务。
 		// Get the task.
-		task := scheduler.Get(taskID)
+		task, err := scheduler.Get(taskID)
+
+		// 如果获取任务时出现错误
+		// If an error occurs when getting the task
+		if err != nil {
+			// 打印错误信息。
+			// Print the error message.
+			fmt.Printf("%% [MAIN] Error: %s\n", err.Error())
+
+			// 返回主函数，不执行后续的代码。
+			// Return to the main function, do not execute the following code.
+			return
+		}
 
 		// 打印任务添加的信息。
 		// Print the information when the task is added.
@@ -95,7 +119,7 @@ func main() {
 	// 添加一个名字存在的任务到调度器，等待触发回调。
 	// Add a task with an existing name to the scheduler and wait for the callback to be triggered.
 	repeatTaskName := "test_task_9"
-	taskID := scheduler.Set(repeatTaskName, func(done ks.WaitForContextDone) (result any, err error) {
+	taskID, err := scheduler.Set(repeatTaskName, func(done ks.WaitForContextDone) (result any, err error) {
 		// 当任务完成时，返回任务的名称 (这步不是必须，只是为了表示函数内部可以接收外部的 ctx 信号)。
 		// When the task is done, return the name of the task (this step is not necessary, just to indicate that the function can receive the ctx signal from the outside).
 		for range done {
@@ -109,6 +133,18 @@ func main() {
 		// 设置任务的延迟时间为 200 毫秒。
 		// Set the delay time of the task to 200 milliseconds.
 	}, time.Millisecond*200)
+
+	// 如果设置任务时出现错误
+	// If an error occurs when setting the task
+	if err != nil {
+		// 打印错误信息。
+		// Print the error message.
+		fmt.Printf("%% [MAIN] Error: %s\n", err.Error())
+
+		// 返回主函数，不执行后续的代码。
+		// Return to the main function, do not execute the following code.
+		return
+	}
 
 	// 打印任务添加的信息。
 	// Print the information when the task is added.
