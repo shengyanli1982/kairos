@@ -1,11 +1,15 @@
 package kairos
 
-// Config 是一个结构体，包含一个 Callback 类型的字段
-// Config is a struct that contains a field of type Callback
+// Config 是一个结构体，包含一个 Callback 类型的字段和一个布尔类型的字段。
+// Config is a struct that contains a field of type Callback and a field of type bool.
 type Config struct {
-	// callback 是一个 Callback 类型的字段，用于设置任务的回调函数
-	// callback is a field of type Callback, used to set the callback functions for the task
+	// callback 是一个 Callback 类型的字段，用于设置任务的回调函数。
+	// callback is a field of type Callback, used to set the callback functions for the task.
 	callback Callback
+
+	// unique 是一个布尔类型的字段，用于标识任务是否唯一。
+	// unique is a field of type bool, used to indicate whether the task is unique.
+	unique bool
 }
 
 // NewConfig 是一个函数，用于创建一个新的 Config 实例
@@ -35,6 +39,18 @@ func (c *Config) WithCallback(callback Callback) *Config {
 
 	// 返回 Config
 	// Return Config
+	return c
+}
+
+// WithDisableDuplicated 是一个方法，用于设置 Config 结构体中的 unique 字段。
+// WithDisableDuplicated is a method used to set the unique field in the Config struct.
+func (c *Config) WithDisableDuplicated(disable bool) *Config {
+	// 设置 unique 字段的值为 disable 参数的值。
+	// Set the value of the unique field to the value of the disable parameter.
+	c.unique = disable
+
+	// 返回 Config 结构体的指针。
+	// Return the pointer to the Config struct.
 	return c
 }
 

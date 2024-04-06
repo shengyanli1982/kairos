@@ -19,6 +19,10 @@ type Scheduler struct {
 	// taskCache is a pointer to the cache.Cache struct, used to store the scheduled tasks.
 	taskCache *cache.Cache
 
+	// uniqCache 是一个指向 cache.Cache 结构体的指针，用于存储唯一的任务。
+	// uniqCache is a pointer to the cache.Cache struct, used to store unique tasks.
+	uniqCache *cache.Cache
+
 	// ctx 是一个 context.Context 类型的变量，用于存储调度器的上下文信息。
 	// ctx is a variable of type context.Context, used to store the context information of the scheduler.
 	ctx context.Context
@@ -49,6 +53,10 @@ func New(conf *Config) *Scheduler {
 		// taskCache 字段被设置为一个新的 Cache 结构体。
 		// The taskCache field is set to a new Cache struct.
 		taskCache: cache.NewCache(),
+
+		// uniqCache 字段被设置为一个新的 Cache 结构体。
+		// The uniqCache field is set to a new Cache struct.
+		uniqCache: cache.NewCache(),
 
 		// once 字段被设置为一个新的 Once 结构体。
 		// The once field is set to a new Once struct.
@@ -101,14 +109,42 @@ func (s *Scheduler) Stop() {
 			// Put the task reference back into the task reference pool.
 			taskRefPool.Put(taskRef)
 		})
+
+		// 如果调度器的配置中 uniqTask 为 true
+		// If uniqTask in the scheduler's configuration is true
+		if s.cfg.unique {
+			// 调用 uniqCache 的 Cleanup 方法，清理其中的所有任务
+			// Call the Cleanup method of uniqCache to clean up all the tasks in it
+			s.uniqCache.Cleanup(func(value any) {})
+		}
 	})
 }
 
 // add 是一个方法，用于向调度器添加新的任务。
 // add is a method used to add new tasks to the scheduler.
 func (s *Scheduler) add(ctx context.Context, cancel context.CancelFunc, name string, handleFunc TaskHandleFunc) string {
-	// 创建一个新的任务。
-	// Create a new task.
+	// 如果调度器的配置中 uniqTask 为 true
+	// If uniqTask in the scheduler's configuration is true
+	if s.cfg.unique {
+		// 从 uniqCache 中获取任务
+		// Get the task from uniqCache
+		if data, ok := s.uniqCache.Get(name); ok {
+			// 获取任务的 ID
+			// Get the ID of the task
+			taskID := data.(string)
+
+			// 调用回调函数，通知任务已经存在。
+			// Call the callback function to notify that the task already exists.
+			s.cfg.callback.OnTaskDuplicated(taskID, name)
+
+			// 返回任务的 ID。
+			// Return the ID of the task.
+			return taskID
+		}
+	}
+
+	// 创建一个新的任务，并设置任务执行后和任务完成后的回调函数。
+	// Create a new task, and set the callback functions after the task is executed and after the task is finished.
 	task := NewTask(ctx, name, handleFunc).
 		// 设置任务执行后的回调函数。
 		// Set the callback function after the task is executed.
@@ -125,6 +161,14 @@ func (s *Scheduler) add(ctx context.Context, cancel context.CancelFunc, name str
 	// 获取任务的 ID。
 	// Get the ID of the task.
 	taskID := task.GetMetadata().GetID()
+
+	// 如果调度器的配置中 unique 为 true
+	// If unique in the scheduler's configuration is true
+	if s.cfg.unique {
+		// 在 uniqCache 中设置该任务的 ID
+		// Set the ID of the task in uniqCache
+		s.uniqCache.Set(name, taskID)
+	}
 
 	// 从任务引用池中获取一个任务引用。
 	// Get a task reference from the task reference pool.
@@ -236,6 +280,14 @@ func (s *Scheduler) Delete(id string) {
 		// 调用回调函数，通知任务已经被删除。
 		// Call the callback function to notify that the task has been deleted.
 		s.cfg.callback.OnTaskRemoved(id, taskName)
+
+		// 如果调度器的配置中 uniqTask 为 true
+		// If uniqTask in the scheduler's configuration is true
+		if s.cfg.unique {
+			// 从 uniqCache 中删除指定名称的任务
+			// Delete the task with the specified name from uniqCache
+			s.uniqCache.Delete(taskName)
+		}
 	}
 }
 

@@ -24,6 +24,10 @@ type Callback interface {
 	// OnTaskRemoved 是当任务被移除时的回调函数，它接收任务 id 和任务名称作为参数
 	// OnTaskRemoved is the callback function when a task is removed, it takes the task id and task name as parameters
 	OnTaskRemoved(id, name string)
+
+	// OnTaskDuplicated 是当任务重复时的回调函数，它接收任务 id 和任务名称作为参数
+	// OnTaskDuplicated is the callback function when a task is duplicated, it takes the task id and task name as parameters
+	OnTaskDuplicated(id, name string)
 }
 
 // EmptyCallback 是一个空的回调实现，它的所有方法都是空操作
@@ -41,6 +45,10 @@ func (EmptyCallback) OnTaskRemoved(id, name string) {}
 // OnTaskAdded 是 EmptyCallback 的一个方法，它是一个空操作
 // OnTaskAdded is a method of EmptyCallback, it is a no-op
 func (EmptyCallback) OnTaskAdded(id, name string, execAt time.Time) {}
+
+// OnTaskDuplicated 是 EmptyCallback 的一个方法，它是一个空操作
+// OnTaskDuplicated is a method of EmptyCallback, it is a no-op
+func (EmptyCallback) OnTaskDuplicated(id, name string) {}
 
 // NewEmptyTaskCallback 是一个函数，它返回一个新的 EmptyCallback 实例
 // NewEmptyTaskCallback is a function that returns a new instance of EmptyCallback
