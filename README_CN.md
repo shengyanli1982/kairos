@@ -54,8 +54,8 @@ go get github.com/shengyanli1982/kairos
     	// OnTaskAdded is the callback function when a task is added, it takes the task id, task name, and execution time as parameters
     	OnTaskAdded(id, name string, execAt time.Time)
 
-    	// OnTaskExecuted 是当任务被执行时的回调函数，它接收任务 id、任务名称、数据、原因和错误作为参数
-    	// OnTaskExecuted is the callback function when a task is executed, it takes the task id, task name, data, reason, and error as parameters
+    	// OnTaskExecuted 是当任务被执行时的回调函数，它接收任务 id、任务名称、任务结果、原因和错误作为参数
+    	// OnTaskExecuted is the callback function when a task is executed, it takes the task id, task name, task result, reason, and error as parameters
     	OnTaskExecuted(id, name string, data interface{}, reason, err error)
 
     	// OnTaskRemoved 是当任务被移除时的回调函数，它接收任务 id 和任务名称作为参数
@@ -91,6 +91,8 @@ go get github.com/shengyanli1982/kairos
 > 如果希望 `Scheduler` 使用任务名称作为标识符，请确保在 `WithUniqued` 设置为 `true` 时为每个任务使用不同的名称。
 >
 > 当 `WithUniqued` 设置为 `true` 时，`Set` 和 `SetAt` 方法将返回正在运行的任务的 `id`。
+>
+> 如果您想要访问由 `Set` 和 `SetAt` 设置的自定义处理函数的结果值，您可以利用 `Callback` 中的 `OnTaskExecuted` 方法。该方法有一个 `result` 参数，表示自定义处理函数返回的结果值。
 
 ## 3. 任务
 
@@ -220,7 +222,7 @@ type demoSchedCallback struct{}
 
 // OnTaskExecuted 是一个方法，当任务执行后会被调用。
 // OnTaskExecuted is a method that is called after a task is executed.
-func (tc *demoSchedCallback) OnTaskExecuted(id, name string, data any, reason, err error) {
+func (tc *demoSchedCallback) OnTaskExecuted(id, name string, result any, reason, err error) {
 	// 打印任务执行后的信息。
 	// Print the information after the task is executed.
 	fmt.Printf("# [CALLBACK] Task executed, id: %s, name: %s, data: %v, reason: %v, err: %v\n", id, name, data, reason, err)

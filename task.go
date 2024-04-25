@@ -36,7 +36,7 @@ type onFinishedHandleFunc = func(metadata *TaskMetadata)
 
 // onExecutedHandleFunc 是一个函数类型，它接受任务 id、name、data、reason 和 err
 // onExecutedHandleFunc is a function type that accepts task id, name, data, reason and err
-type onExecutedHandleFunc = func(id, name string, data any, reason, err error)
+type onExecutedHandleFunc = func(id, name string, result any, reason, err error)
 
 // DefaultTaskHandleFunc 是默认的任务处理函数，它返回 nil 数据和 nil 错误
 // DefaultTaskHandleFunc is the default task handling function, it returns nil data and nil error
@@ -44,7 +44,7 @@ var DefaultTaskHandleFunc TaskHandleFunc = func(done WaitForContextDone) (data a
 
 // defaultExecutedHandleFunc 是默认的执行处理函数，它不执行任何操作
 // defaultExecutedHandleFunc is the default executed handling function, it does nothing
-var defaultExecutedHandleFunc onExecutedHandleFunc = func(id, name string, data any, reason, err error) {}
+var defaultExecutedHandleFunc onExecutedHandleFunc = func(id, name string, result any, reason, err error) {}
 
 // defaultFinishedHandleFunc 是默认的完成处理函数，它不执行任何操作
 // defaultFinishedHandleFunc is the default finished handling function, it does nothing

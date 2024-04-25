@@ -17,9 +17,9 @@ type Callback interface {
 	// OnTaskAdded is the callback function when a task is added, it takes the task id, task name, and execution time as parameters
 	OnTaskAdded(id, name string, execAt time.Time)
 
-	// OnTaskExecuted 是当任务被执行时的回调函数，它接收任务 id、任务名称、数据、原因和错误作为参数
-	// OnTaskExecuted is the callback function when a task is executed, it takes the task id, task name, data, reason, and error as parameters
-	OnTaskExecuted(id, name string, data interface{}, reason, err error)
+	// OnTaskExecuted 是当任务被执行时的回调函数，它接收任务 id、任务名称、任务结果、原因和错误作为参数
+	// OnTaskExecuted is the callback function when a task is executed, it takes the task id, task name, task result, reason, and error as parameters
+	OnTaskExecuted(id, name string, result interface{}, reason, err error)
 
 	// OnTaskRemoved 是当任务被移除时的回调函数，它接收任务 id 和任务名称作为参数
 	// OnTaskRemoved is the callback function when a task is removed, it takes the task id and task name as parameters
