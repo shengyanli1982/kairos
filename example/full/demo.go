@@ -13,10 +13,10 @@ type demoSchedCallback struct{}
 
 // OnTaskExecuted 是一个方法，当任务执行后会被调用。
 // OnTaskExecuted is a method that is called after a task is executed.
-func (tc *demoSchedCallback) OnTaskExecuted(id, name string, data any, reason, err error) {
+func (tc *demoSchedCallback) OnTaskExecuted(id, name string, result any, reason, err error) {
 	// 打印任务执行后的信息。
 	// Print the information after the task is executed.
-	fmt.Printf("# [CALLBACK] Task executed, id: %s, name: %s, data: %v, reason: %v, err: %v\n", id, name, data, reason, err)
+	fmt.Printf("# [CALLBACK] Task executed, id: %s, name: %s, data: %v, reason: %v, err: %v\n", id, name, result, reason, err)
 }
 
 // OnTaskAdded 是一个方法，当任务被添加时会被调用。

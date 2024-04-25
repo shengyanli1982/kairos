@@ -12,9 +12,9 @@ import (
 type testSchedCallback struct{}
 
 // OnTaskExecuted is called when a task is executed
-func (tc *testSchedCallback) OnTaskExecuted(id, name string, data any, reason, err error) {
+func (tc *testSchedCallback) OnTaskExecuted(id, name string, result any, reason, err error) {
 	// Print the task execution details
-	fmt.Printf("Task executed, id: %s, name: %s, data: %v, reason: %v, err: %v\n", id, name, data, reason, err)
+	fmt.Printf("Task executed, id: %s, name: %s, data: %v, reason: %v, err: %v\n", id, name, result, reason, err)
 }
 
 // OnTaskAdded is called when a task is added

@@ -13,9 +13,9 @@ type testStandardTaskCallback struct {
 	t *testing.T
 }
 
-func (tc *testStandardTaskCallback) OnExecuted(id, name string, data any, reason, err error) {
+func (tc *testStandardTaskCallback) OnExecuted(id, name string, result any, reason, err error) {
 	// handle task callback logic here
-	fmt.Printf("Task executed, id: %s, name: %s, data: %v, reason: %v, err: %v\n", id, name, data, reason, err)
+	fmt.Printf("Task executed, id: %s, name: %s, data: %v, reason: %v, err: %v\n", id, name, result, reason, err)
 	assert.ErrorIs(tc.t, reason, ErrorTaskTimeout, "task should be canceled by timeout")
 }
 
@@ -23,9 +23,9 @@ type testEarlyStopTaskCallback struct {
 	t *testing.T
 }
 
-func (tc *testEarlyStopTaskCallback) OnExecuted(id, name string, data any, reason, err error) {
+func (tc *testEarlyStopTaskCallback) OnExecuted(id, name string, result any, reason, err error) {
 	// handle task callback logic here
-	fmt.Printf("Task executed, id: %s, name: %s, data: %v, reason: %v, err: %v\n", id, name, data, reason, err)
+	fmt.Printf("Task executed, id: %s, name: %s, data: %v, reason: %v, err: %v\n", id, name, result, reason, err)
 	assert.ErrorIs(tc.t, reason, ErrorTaskEarlyReturn, "task should be canceled by self ctx cancel")
 }
 
@@ -33,9 +33,9 @@ type testParentCancelTaskCallback struct {
 	t *testing.T
 }
 
-func (tc *testParentCancelTaskCallback) OnExecuted(id, name string, data any, reason, err error) {
+func (tc *testParentCancelTaskCallback) OnExecuted(id, name string, result any, reason, err error) {
 	// handle task callback logic here
-	fmt.Printf("Task executed, id: %s, name: %s, data: %v, reason: %v, err: %v\n", id, name, data, reason, err)
+	fmt.Printf("Task executed, id: %s, name: %s, data: %v, reason: %v, err: %v\n", id, name, result, reason, err)
 	assert.ErrorIs(tc.t, reason, ErrorTaskCanceled, "task should be canceled by parent ctx cancel")
 }
 

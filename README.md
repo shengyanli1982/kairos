@@ -54,9 +54,9 @@ go get github.com/shengyanli1982/kairos
     	// OnTaskAdded is the callback function when a task is added, it takes the task id, task name, and execution time as parameters
     	OnTaskAdded(id, name string, execAt time.Time)
 
-    	// OnTaskExecuted 是当任务被执行时的回调函数，它接收任务 id、任务名称、数据、原因和错误作为参数
-    	// OnTaskExecuted is the callback function when a task is executed, it takes the task id, task name, data, reason, and error as parameters
-    	OnTaskExecuted(id, name string, data interface{}, reason, err error)
+    	// OnTaskExecuted 是当任务被执行时的回调函数，它接收任务 id、任务名称、任务结果、原因和错误作为参数
+    	// OnTaskExecuted is the callback function when a task is executed, it takes the task id, task name, task result, reason, and error as parameters
+    	OnTaskExecuted(id, name string, result interface{}, reason, err error)
 
     	// OnTaskRemoved 是当任务被移除时的回调函数，它接收任务 id 和任务名称作为参数
     	// OnTaskRemoved is the callback function when a task is removed, it takes the task id and task name as parameters
@@ -91,6 +91,8 @@ The `Kairos` provides the following methods:
 > If you want the `Scheduler` to use the task name as the identifier, make sure to use different names for each task when `WithUniqued` is set to `true`.
 >
 > When `WithUniqued` is set to `true`, the `Set` and `SetAt` methods will return the `id` of the running task.
+>
+> If you want to access the result value of a custom handler set by `Set` and `SetAt`, you can utilize the `OnTaskExecuted` method in `Callback`. This method has a `result` parameter, which represents the result value returned by the custom handler.
 
 ## 3. Task
 
@@ -220,7 +222,7 @@ type demoSchedCallback struct{}
 
 // OnTaskExecuted 是一个方法，当任务执行后会被调用。
 // OnTaskExecuted is a method that is called after a task is executed.
-func (tc *demoSchedCallback) OnTaskExecuted(id, name string, data any, reason, err error) {
+func (tc *demoSchedCallback) OnTaskExecuted(id, name string, result any, reason, err error) {
 	// 打印任务执行后的信息。
 	// Print the information after the task is executed.
 	fmt.Printf("# [CALLBACK] Task executed, id: %s, name: %s, data: %v, reason: %v, err: %v\n", id, name, data, reason, err)
